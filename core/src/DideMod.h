@@ -18,4 +18,5 @@ private:
 
 	Config m_config;
 	void logConfig();
+	void logVersion();
 };

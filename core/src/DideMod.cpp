@@ -3,6 +3,7 @@
 #include <core/Logging.h>
 #include <core/HostAppTargetInfo.h>
 #include <core/StandardPaths.h>
+#include <core/CoreVersion.h>
 
 #include <cstring>
 #include <Windows.h>
@@ -58,6 +59,7 @@ DideMod::~DideMod()
 bool DideMod::Initialize()
 {
 	initializeLogger(m_config.General.LogFile, m_config.General.EnableLogging);
+	logVersion();
 
 	if (!validateConfig()) {
 		EZLOGGER << "Configuration is invalid." << std::endl;
@@ -176,6 +178,11 @@ void DideMod::logConfig()
 	for (auto it = m_config.LoadCustomPaks.begin(); it != m_config.LoadCustomPaks.end(); ++it) {
 		EZLOGGER << "    " << *it << std::endl;
 	}
+}
+
+void DideMod::logVersion()
+{
+	EZLOGGER << "Core version: " << CoreGetVersion() << std::endl;
 }
 
 void DideMod::LoadPaks()
