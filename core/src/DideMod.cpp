@@ -22,20 +22,23 @@ struct FFSAddSourceFlags
 	};
 };
 
+
 typedef bool (*fs_add_source_t)(const char* path, FFSAddSourceFlags::ENUM flags);
 fs_add_source_t fs_add_source_original;
 
+typedef void (*engine_InitializeGameScript_t)(void* p1, void* p2);
+engine_InitializeGameScript_t engine_InitializeGameScript_original;
+
+
 bool fs_add_source_detour(const char* path, FFSAddSourceFlags::ENUM flags)
 {
-	EZLOGGER << "Adding source (flags = " << flags << "): " << path;
+	EZLOGGER << "Adding source: \"" << path << "\" " << flags;
 	auto success = fs_add_source_original(path, flags);
-	EZLOGGER << " (" << (success ? std::string("OK") : std::string("error")) << ")" << std::endl;
+	EZLOGGER << " (returned " << std::boolalpha << success << ")" << std::endl;
 	return success;
 }
 
 
-typedef void (*engine_InitializeGameScript_t)(void* p1, void* p2);
-engine_InitializeGameScript_t engine_InitializeGameScript_original;
 DideMod* g_mod = nullptr;
 
 void engine_InitializeGameScript_detour(void* p1, void* p2)
@@ -46,6 +49,7 @@ void engine_InitializeGameScript_detour(void* p1, void* p2)
 
 	engine_InitializeGameScript_original(p1, p2);
 }
+
 
 
 DideMod::DideMod(Config config)
@@ -75,33 +79,37 @@ bool DideMod::Initialize()
 		return true;
 	}
 
-	EZLOGGER << "Game DLL image base: " << std::hex << HostAppTargetInfo::GameDll << std::endl;
-	EZLOGGER << "Engine DLL image base: " << std::hex << HostAppTargetInfo::EngineDll << std::endl;
-	EZLOGGER << "Filesystem DLL image base: " << std::hex << HostAppTargetInfo::FilesystemDll << std::endl;
+	EZLOGGER << "Game DLL image base: " << std::hex << std::showbase << HostAppTargetInfo::GameDll << std::endl;
+	EZLOGGER << "Engine DLL image base: " << std::hex << std::showbase << HostAppTargetInfo::EngineDll << std::endl;
+	EZLOGGER << "Filesystem DLL image base: " << std::hex << std::showbase << HostAppTargetInfo::FilesystemDll << std::endl;
 
 	g_mod = this;
 
 
-	fs_add_source_t fs_add_source = (fs_add_source_t)GetProcAddress((HMODULE)HostAppTargetInfo::FilesystemDll, "?add_source@fs@@YA_NPEBDW4ENUM@FFSAddSourceFlags@@@Z");
-	if (!fs_add_source) {
-		EZLOGGER << "Failed to get address of filesystem.fs::add_source." << std::endl;
-		return false;
+	{
+		fs_add_source_t fs_add_source = (fs_add_source_t)GetProcAddress((HMODULE)HostAppTargetInfo::FilesystemDll, "?add_source@fs@@YA_NPEBDW4ENUM@FFSAddSourceFlags@@@Z");
+		if (!fs_add_source) {
+			EZLOGGER << "Failed to get address of filesystem.fs::add_source." << std::endl;
+			return false;
+		}
+
+		EZLOGGER << "filesystem.fs::add_source: " << std::hex << std::showbase << fs_add_source << std::endl;
+		MH_CreateHook(fs_add_source, fs_add_source_detour, (LPVOID*)&fs_add_source_original);
+		MH_QueueEnableHook(fs_add_source);
 	}
 
-	EZLOGGER << "filesystem.fs::add_source: " << std::hex << fs_add_source << std::endl;
-	MH_CreateHook(fs_add_source, fs_add_source_detour, (LPVOID*)&fs_add_source_original);
-	MH_QueueEnableHook(fs_add_source);
 
+	{
+		engine_InitializeGameScript_t engine_InitializeGameScript = (engine_InitializeGameScript_t)GetProcAddress((HMODULE)HostAppTargetInfo::EngineDll, "InitializeGameScript");
+		if (!engine_InitializeGameScript) {
+			EZLOGGER << "Failed to get address of engine.InitializeGameScript." << std::endl;
+			return false;
+		}
 
-	engine_InitializeGameScript_t engine_InitializeGameScript = (engine_InitializeGameScript_t)GetProcAddress((HMODULE)HostAppTargetInfo::EngineDll, "InitializeGameScript");
-	if (!engine_InitializeGameScript) {
-		EZLOGGER << "Failed to get address of engine.InitializeGameScript." << std::endl;
-		return false;
+		EZLOGGER << "engine.InitializeGameScript: " << std::hex << std::showbase << engine_InitializeGameScript << std::endl;
+		MH_CreateHook(engine_InitializeGameScript, engine_InitializeGameScript_detour, (LPVOID*)&engine_InitializeGameScript_original);
+		MH_QueueEnableHook(engine_InitializeGameScript);
 	}
-
-	EZLOGGER << "engine.InitializeGameScript: " << std::hex << engine_InitializeGameScript << std::endl;
-	MH_CreateHook(engine_InitializeGameScript, engine_InitializeGameScript_detour, (LPVOID*)&engine_InitializeGameScript_original);
-	MH_QueueEnableHook(engine_InitializeGameScript);
 
 
 	MH_ApplyQueued();
