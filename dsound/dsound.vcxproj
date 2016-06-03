@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E42AEDA3-BEFB-41FF-846C-616E8EB8FDB4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>libpad</RootNamespace>
-    <ProjectName>libpad</ProjectName>
+    <RootNamespace>dsound</RootNamespace>
+    <ProjectName>dsound</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
