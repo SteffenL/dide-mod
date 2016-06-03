@@ -15,9 +15,11 @@ public:
 	SequenceSearcher(const char* bufferStart, const char* bufferEnd);
 
 	bool Search(
-		const char* searchData,
 		const char* searchMask,
 		uintptr_t* foundOffset = nullptr);
+
+private:
+	unsigned char hexDigitToDec(const char c) const;
 };
 
 #endif // __SequenceSearcher__

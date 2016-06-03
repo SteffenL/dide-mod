@@ -1,5 +1,7 @@
 #include <core/SequenceSearcher.h>
 #include <cstring>
+#include <stdexcept>
+#include <cmath>
 
 SequenceSearcher::SequenceSearcher(const char* bufferStart, const char* bufferEnd)
 	: m_bufferStart(bufferStart), m_bufferEnd(bufferEnd)
@@ -7,77 +9,71 @@ SequenceSearcher::SequenceSearcher(const char* bufferStart, const char* bufferEn
 }
 
 bool SequenceSearcher::Search(
-	const char* searchData,
 	const char* searchMask,
 	uintptr_t* foundOffset)
 {
-	const char* pbuf = m_bufferStart;
-	const char* pdata = searchData;
-	const char* pmask = searchMask;
-	size_t dataSize = ::strnlen_s(pmask, MAX_MASK_LENGTH);
-	if (!dataSize)
-	{
+	auto inputLength = ::strnlen_s(searchMask, MAX_MASK_LENGTH);
+	if (!inputLength) {
 		return false;
 	}
 
-	size_t matchCount = 0;
-	bool isFullMatch = false;
+	auto normalizedInputLength = static_cast<unsigned int>(floor((inputLength + 1) / 2.0)) * 2;
+	if (inputLength != normalizedInputLength) {
+		return false;
+	}
 
-	while (pbuf < (m_bufferEnd - dataSize))
-	{
-		bool charMatches = false;
+	bool hasMatch = false;
+	for (const char* absolutePos = m_bufferStart; absolutePos < m_bufferEnd; ++absolutePos) {
+		const char* branchPos = absolutePos;
+		unsigned int matchCount = 0;
 
-		// Exact match
-		if (*pmask == 'x')
-		{
-			// Character in buffer matches character in search data?
-			if (*pbuf == *pdata)
-			{
-				charMatches = true;
+		for (int i = 0; i < normalizedInputLength; ++i) {
+			unsigned char bitshift = (i % 2) == 0 ? 4 : 0;
+
+			if (searchMask[i] == '?') {
+				// Wildcard matches by default
 			}
-		}
-		// Unknown, treat it as a match
-		else if (*pmask == '?')
-		{
-			charMatches = true;
+			else {
+				// Exact match
+				char branchChar = (*branchPos >> bitshift) & 0xf;
+				if (branchChar != hexDigitToDec(searchMask[i])) {
+					// No match
+					break;
+				}
+			}
+
+			++matchCount;
+			branchPos += i % 2;
 		}
 
-		if (!charMatches)
-		{
-			// Didn't match, reset pointers
-			
-			// Reset the pointer back to the first match
-			pbuf -= matchCount;
-			// Advance to the next character in the buffer
-			++pbuf;
-
-			matchCount = 0;
-			pdata = searchData;
-			pmask = searchMask;
+		// Not enough matches?
+		if (matchCount < inputLength) {
 			continue;
 		}
 
-		++matchCount;
-
-		// Advance to the next character
-		++pbuf;
-
-		// Full match?
-		if (matchCount >= dataSize)
-		{
-			// Reset the pointer back to the first match
-			pbuf -= matchCount;
-			// Calculate the found offset
-			*foundOffset = (pbuf - m_bufferStart);
-			isFullMatch = true;
-			break;
+		if (foundOffset) {
+			*foundOffset = reinterpret_cast<uintptr_t>(absolutePos) - reinterpret_cast<uintptr_t>(m_bufferStart);
 		}
 
-		// Advance to the next character
-		// Moved to the end to save a few CPU cycles
-		++pdata;
-		++pmask;
+		hasMatch = true;
+		break;
 	}
 
-	return isFullMatch;
+	return hasMatch;
+}
+
+unsigned char SequenceSearcher::hexDigitToDec(const char c) const
+{
+	if (c >= '0' && c <= '9') {
+		return c - '0';
+	}
+	else if (c >= 'A' && c <= 'F') {
+		return c - 'A' + 0xa;
+	}
+	else if (c >= 'a' && c <= 'f') {
+		return c - 'a' + 0xa;
+	}
+	else {
+		throw std::runtime_error("Invalid input");
+	}
 }
