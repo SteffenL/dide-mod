@@ -4,6 +4,7 @@
 #include <core/HostAppTargetInfo.h>
 #include <core/StandardPaths.h>
 #include <core/CoreVersion.h>
+#include <core/SequenceSearcher.h>
 
 #include <cstring>
 #include <Windows.h>
@@ -135,29 +136,41 @@ uintptr_t DideMod::getBaseOfCode(uintptr_t imageBase) const
 	return imageBase + ntHeaders->OptionalHeader.BaseOfCode;
 }
 
+uintptr_t DideMod::getSizeOfCode(uintptr_t imageBase) const
+{
+	auto ntHeaders = ImageNtHeader(reinterpret_cast<void*>(imageBase));
+	return ntHeaders->OptionalHeader.SizeOfCode;
+}
+
 bool DideMod::enableDeveloperMenu()
 {
 	if (!m_config.Features.DeveloperMenu) {
 		return true;
 	}
 
-	auto patchAddress = HostAppTargetInfo::GameDll + 0xACCFFC;
-	EZLOGGER << "Trying patch address: " << std::hex << patchAddress << std::endl;
-	if (memcmp((const void*)patchAddress, "\x38\x1d\xe0\xf2\x7a\x00\x0f\x84\x0b\x09\x00\x00", 12) != 0) {
-		EZLOGGER << "Cannot apply patch due to mismatch." << std::endl;
+	auto bufferStart = (const char*)getBaseOfCode(HostAppTargetInfo::GameDll);
+	auto bufferEnd = bufferStart + getSizeOfCode(HostAppTargetInfo::GameDll);
+	SequenceSearcher ss(bufferStart, bufferEnd);
+
+	uintptr_t bufferStartAddr = (uintptr_t)bufferStart;
+	uintptr_t bufferEndAddr = (uintptr_t)bufferEnd;
+	EZLOGGER << "Searching for developer menu offset from " << bufferStartAddr << " to " << bufferEndAddr << "..." << std::endl;
+
+	uintptr_t foundOffset;
+	if (!ss.Search("740CC605??????0001E9BC0500008BDE", &foundOffset)) {
+		EZLOGGER << "Could not find developer menu offset." << std::endl;
 		return false;
 	}
 
-	DWORD oldProtect;
-	if (!VirtualProtect((void*)patchAddress, 12, PAGE_EXECUTE_READWRITE, &oldProtect)) {
-		EZLOGGER << "Cannot change virtual memory protection." << std::endl;
-		return false;
+	uintptr_t rip = (uintptr_t)bufferStart + foundOffset + 2 + 7;
+	uint32_t enableMenuRelAddress = *(uint32_t*)(bufferStart + foundOffset + 4);
+	uintptr_t enableMenuAbsAddress = rip + enableMenuRelAddress;
+	uint8_t* enableMenuAddress = (uint8_t*)enableMenuAbsAddress;
+
+	if (!*enableMenuAddress) {
+		*enableMenuAddress = 1;
 	}
 
-	memcpy((void*)patchAddress, "\xc7\x05\xdc\xf2\x7a\x00\x01\x00\x00\x00\x90\x90", 12);
-	FlushInstructionCache(GetCurrentProcess(), (LPCVOID)patchAddress, 12);
-
-	VirtualProtect((void*)patchAddress, 12, oldProtect, NULL);
 	return true;
 }
 

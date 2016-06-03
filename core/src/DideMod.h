@@ -14,6 +14,7 @@ public:
 private:
 	bool validateConfig();
 	uintptr_t getBaseOfCode(uintptr_t imageBase) const;
+	uintptr_t getSizeOfCode(uintptr_t imageBase) const;
 	bool enableDeveloperMenu();
 
 	Config m_config;
