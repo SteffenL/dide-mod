@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libpad_types.h"
+#include "wrapped_dll_types.h"
 #include <Windows.h>
 
 extern OrigFunctions g_origDllFunctions;
