@@ -1,0 +1,18 @@
+LIBRARY
+EXPORTS
+	DirectSoundCreate=wrapper_DirectSoundCreate							@1
+    DirectSoundEnumerateA=wrapper_DirectSoundEnumerateA					@2
+    DirectSoundEnumerateW=wrapper_DirectSoundEnumerateW					@3
+
+    DllCanUnloadNow=wrapper_DllCanUnloadNow								@4
+    DllGetClassObject=wrapper_DllGetClassObject							@5
+
+    DirectSoundCaptureCreate=wrapper_DirectSoundCaptureCreate			@6
+    DirectSoundCaptureEnumerateA=wrapper_DirectSoundCaptureEnumerateA	@7
+    DirectSoundCaptureEnumerateW=wrapper_DirectSoundCaptureEnumerateW	@8
+
+    GetDeviceID=wrapper_GetDeviceID										@9
+
+    DirectSoundFullDuplexCreate=wrapper_DirectSoundFullDuplexCreate		@10
+    DirectSoundCreate8=wrapper_DirectSoundCreate8						@11
+    DirectSoundCaptureCreate8=wrapper_DirectSoundCaptureCreate8			@12

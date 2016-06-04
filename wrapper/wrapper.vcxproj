@@ -13,8 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E42AEDA3-BEFB-41FF-846C-616E8EB8FDB4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>dsound</RootNamespace>
-    <ProjectName>dsound</ProjectName>
+    <RootNamespace>wrapper</RootNamespace>
+    <ProjectName>wrapper</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -42,11 +42,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>dsound</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+    <TargetName>dsound</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -54,8 +56,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;libpad_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\core\include;$(SolutionDir)\thirdparty\minhook\include;$(SolutionDir)\thirdparty\ezlogger</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;DLL_WRAPPER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\core\include;$(SolutionDir)\thirdparty\minhook\include;$(SolutionDir)\thirdparty\ezlogger;$(SolutionDir)\thirdparty\nowide</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -77,8 +79,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;libpad_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\core\include;$(SolutionDir)\thirdparty\minhook\include;$(SolutionDir)\thirdparty\ezlogger</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;DLL_WRAPPER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\core\include;$(SolutionDir)\thirdparty\minhook\include;$(SolutionDir)\thirdparty\ezlogger;$(SolutionDir)\thirdparty\nowide</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -96,13 +98,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="hooks.cpp" />
-    <ClCompile Include="libpad.cpp" />
+    <ClCompile Include="wrapper.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hooks.h" />
-    <ClInclude Include="libpad.h" />
-    <ClInclude Include="libpad_types.h" />
+    <ClInclude Include="wrapper.h" />
+    <ClInclude Include="wrapped_dll_types.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
