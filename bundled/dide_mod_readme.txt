@@ -13,10 +13,8 @@ It should go without saying that using third party modifications may not be safe
 Installation
 --------------------------------------------------------------------------------
 
-In your DIDE install directory, rename the file "libpad.dll" to "libpad.backup.dll".
-
 Place the following files in your DIDE install directory:
-    libpad.dll
+    dsound.dll
     dide_mod.ini
 
 Open the config file "dide_mod.ini" with a text editor (e.g. Notepad) to customize settings.
