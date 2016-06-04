@@ -27,7 +27,7 @@ bool SequenceSearcher::Search(
 		const char* branchPos = absolutePos;
 		unsigned int matchCount = 0;
 
-		for (int i = 0; i < normalizedInputLength; ++i) {
+		for (unsigned int i = 0; i < normalizedInputLength; ++i) {
 			unsigned char bitshift = (i % 2) == 0 ? 4 : 0;
 
 			if (searchMask[i] == '?') {
