@@ -3,9 +3,8 @@
 
 #include <vector>
 
-#include <windows.h>
 #include <shlwapi.h>
-
+#include <windows.h>
 
 std::string StandardPaths::GetExecutablePath() {
     std::vector<wchar_t> buffer;
@@ -34,14 +33,13 @@ std::string StandardPaths::GetExecutablePath() {
 
     std::string path;
     path = nowide::narrow(&buffer[0]);
-    
+
     return path;
 }
 
-std::string StandardPaths::GetExecutableDir()
-{
-	auto exePathW = nowide::widen(GetExecutablePath());
-	std::vector<wchar_t> buffer(exePathW.begin(), exePathW.end());
-	::PathRemoveFileSpecW(buffer.data());
-	return nowide::narrow(buffer.data());
+std::string StandardPaths::GetExecutableDir() {
+    auto exePathW = nowide::widen(GetExecutablePath());
+    std::vector<wchar_t> buffer(exePathW.begin(), exePathW.end());
+    ::PathRemoveFileSpecW(buffer.data());
+    return nowide::narrow(buffer.data());
 }

@@ -3,26 +3,22 @@
 #include <string>
 #include <vector>
 
-
-class Config
-{
+class Config {
 public:
-	Config();
-	virtual ~Config();
+    Config();
+    virtual ~Config();
 
 public:
-	struct 
-	{
-		bool EnableMod;
-		bool EnableLogging;
-		std::string LogFile;
-	} General;
+    struct {
+        bool EnableMod;
+        bool EnableLogging;
+        std::string LogFile;
+    } General;
 
-	struct 
-	{
-		bool DeveloperMenu;
-		bool CustomPak;
-	} Features;
+    struct {
+        bool DeveloperMenu;
+        bool CustomPak;
+    } Features;
 
-	std::vector<std::string> LoadCustomPaks;
+    std::vector<std::string> LoadCustomPaks;
 };

@@ -3,14 +3,11 @@
 
 #include <windows.h>
 
-
-int MsgBox::Show(void* parent, const std::string& text, unsigned int style)
-{
-	return Show(parent, text, std::string(), style);
+int MsgBox::Show(void* parent, const std::string& text, unsigned int style) {
+    return Show(parent, text, std::string(), style);
 }
 
-int MsgBox::Show(void* parent, const std::string& text, const std::string& title, unsigned int style)
-{
+int MsgBox::Show(void* parent, const std::string& text, const std::string& title, unsigned int style) {
     auto nativeParent = static_cast<HWND>(parent);
     style |= parent ? MB_APPLMODAL : MB_TASKMODAL;
 

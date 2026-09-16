@@ -1,6 +1,3 @@
 #include <core/CoreVersion.h>
 
-std::string CoreGetVersion()
-{
-	return "@CORE_VERSION_SCM_COMMIT@";
-}
+std::string CoreGetVersion() { return "@CORE_VERSION_SCM_COMMIT@"; }

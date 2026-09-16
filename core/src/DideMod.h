@@ -2,22 +2,21 @@
 
 #include "Config.h"
 
-class DideMod
-{
+class DideMod {
 public:
-	DideMod(Config config);
-	virtual ~DideMod();
-	bool Initialize();
-	void Shutdown();
-	void LoadPaks();
+    DideMod(Config config);
+    virtual ~DideMod();
+    bool Initialize();
+    void Shutdown();
+    void LoadPaks();
 
 private:
-	bool validateConfig();
-	uintptr_t getBaseOfCode(uintptr_t imageBase) const;
-	uintptr_t getSizeOfCode(uintptr_t imageBase) const;
-	bool enableDeveloperMenu();
+    bool validateConfig();
+    uintptr_t getBaseOfCode(uintptr_t imageBase) const;
+    uintptr_t getSizeOfCode(uintptr_t imageBase) const;
+    bool enableDeveloperMenu();
 
-	Config m_config;
-	void logConfig();
-	void logVersion();
+    Config m_config;
+    void logConfig();
+    void logVersion();
 };

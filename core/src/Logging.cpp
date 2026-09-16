@@ -10,7 +10,8 @@ std::unique_ptr<Logger> Logger::create(const std::string& filePath, bool enableL
 Logger& Logger::get() { return *instance(); }
 void Logger::set(std::unique_ptr<Logger> instance) { Logger::instance() = std::move(instance); }
 
-Logger::Logger(const std::string& filePath, bool enableLogging) : m_enabled{enableLogging}, m_os{new nowide::ofstream{filePath}} {}
+Logger::Logger(const std::string& filePath, bool enableLogging)
+        : m_enabled{enableLogging}, m_os{new nowide::ofstream{filePath}} {}
 
 std::unique_ptr<Logger>& Logger::instance() {
     static std::unique_ptr<Logger> instance;

@@ -2,9 +2,8 @@
 
 #include <string>
 
-class StandardPaths
-{
+class StandardPaths {
 public:
-	static std::string GetExecutablePath();
-	static std::string GetExecutableDir();
+    static std::string GetExecutablePath();
+    static std::string GetExecutableDir();
 };
