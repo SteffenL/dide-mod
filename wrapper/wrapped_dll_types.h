@@ -6,35 +6,35 @@
 
 struct OrigFunctions
 {
-	typedef HRESULT (WINAPI *DirectSoundCreate_t)(__in_opt LPCGUID pcGuidDevice, __deref_out LPDIRECTSOUND *ppDS, __null LPUNKNOWN pUnkOuter);
-	typedef HRESULT (WINAPI *DirectSoundEnumerateA_t)(__in LPDSENUMCALLBACKA pDSEnumCallback, __in_opt LPVOID pContext);
-	typedef HRESULT (WINAPI *DirectSoundEnumerateW_t)(__in LPDSENUMCALLBACKW pDSEnumCallback, __in_opt LPVOID pContext);
+	typedef HRESULT (WINAPI *DirectSoundCreate_t)(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
+	typedef HRESULT (WINAPI *DirectSoundEnumerateA_t)(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext);
+	typedef HRESULT (WINAPI *DirectSoundEnumerateW_t)(LPDSENUMCALLBACKW pDSEnumCallback, LPVOID pContext);
 
-	typedef HRESULT (WINAPI *DirectSoundCaptureCreate_t)(__in_opt LPCGUID pcGuidDevice, __deref_out LPDIRECTSOUNDCAPTURE *ppDSC, __null LPUNKNOWN pUnkOuter);
-	typedef HRESULT (WINAPI *DirectSoundCaptureEnumerateA_t)(__in LPDSENUMCALLBACKA pDSEnumCallback, __in_opt LPVOID pContext);
-	typedef HRESULT (WINAPI *DirectSoundCaptureEnumerateW_t)(__in LPDSENUMCALLBACKW pDSEnumCallback, __in_opt LPVOID pContext);
+	typedef HRESULT (WINAPI *DirectSoundCaptureCreate_t)(LPCGUID pcGuidDevice, LPDIRECTSOUNDCAPTURE *ppDSC, LPUNKNOWN pUnkOuter);
+	typedef HRESULT (WINAPI *DirectSoundCaptureEnumerateA_t)(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext);
+	typedef HRESULT (WINAPI *DirectSoundCaptureEnumerateW_t)(LPDSENUMCALLBACKW pDSEnumCallback, LPVOID pContext);
 
-	typedef HRESULT (WINAPI *DirectSoundCreate8_t)(__in_opt LPCGUID pcGuidDevice, __deref_out LPDIRECTSOUND8 *ppDS8, __null LPUNKNOWN pUnkOuter);
-	typedef HRESULT (WINAPI *DirectSoundCaptureCreate8_t)(__in_opt LPCGUID pcGuidDevice, __deref_out LPDIRECTSOUNDCAPTURE8 *ppDSC8, __null LPUNKNOWN pUnkOuter);
+	typedef HRESULT (WINAPI *DirectSoundCreate8_t)(LPCGUID pcGuidDevice, LPDIRECTSOUND8 *ppDS8, LPUNKNOWN pUnkOuter);
+	typedef HRESULT (WINAPI *DirectSoundCaptureCreate8_t)(LPCGUID pcGuidDevice, LPDIRECTSOUNDCAPTURE8 *ppDSC8, LPUNKNOWN pUnkOuter);
 	typedef HRESULT (WINAPI *DirectSoundFullDuplexCreate_t)(
-		__in_opt LPCGUID pcGuidCaptureDevice,
-		__in_opt LPCGUID pcGuidRenderDevice,
-		__in LPCDSCBUFFERDESC pcDSCBufferDesc,
-		__in LPCDSBUFFERDESC pcDSBufferDesc,
+		LPCGUID pcGuidCaptureDevice,
+		LPCGUID pcGuidRenderDevice,
+		LPCDSCBUFFERDESC pcDSCBufferDesc,
+		LPCDSBUFFERDESC pcDSBufferDesc,
 		HWND hWnd,
 		DWORD dwLevel,
-		__deref_out LPDIRECTSOUNDFULLDUPLEX* ppDSFD,
-		__deref_out LPDIRECTSOUNDCAPTUREBUFFER8 *ppDSCBuffer8,
-		__deref_out LPDIRECTSOUNDBUFFER8 *ppDSBuffer8,
-		__null LPUNKNOWN pUnkOuter);
+		LPDIRECTSOUNDFULLDUPLEX* ppDSFD,
+		LPDIRECTSOUNDCAPTUREBUFFER8 *ppDSCBuffer8,
+		LPDIRECTSOUNDBUFFER8 *ppDSBuffer8,
+		LPUNKNOWN pUnkOuter);
 
-	typedef HRESULT (WINAPI *GetDeviceID_t)(__in_opt LPCGUID pGuidSrc, __out LPGUID pGuidDest);
+	typedef HRESULT (WINAPI *GetDeviceID_t)(LPCGUID pGuidSrc, LPGUID pGuidDest);
 
-	typedef HRESULT (__stdcall *DllCanUnloadNow_t)();
-	typedef HRESULT (__stdcall *DllGetClassObject_t)(
-		_In_  REFCLSID rclsid,
-		_In_  REFIID   riid,
-		_Out_ LPVOID   *ppv);
+	typedef HRESULT (*DllCanUnloadNow_t)();
+	typedef HRESULT (*DllGetClassObject_t)(
+		REFCLSID rclsid,
+		REFIID   riid,
+		LPVOID   *ppv);
 
 
 	DirectSoundCreate_t DirectSoundCreate;

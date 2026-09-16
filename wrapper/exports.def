@@ -1,4 +1,3 @@
-LIBRARY
 EXPORTS
 	DirectSoundCreate=wrapper_DirectSoundCreate							@1
     DirectSoundEnumerateA=wrapper_DirectSoundEnumerateA					@2

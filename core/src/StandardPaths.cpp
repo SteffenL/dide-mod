@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <Windows.h>
-#include <Shlwapi.h>
+#include <windows.h>
+#include <shlwapi.h>
 
 
 std::string StandardPaths::GetExecutablePath() {

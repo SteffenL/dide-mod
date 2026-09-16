@@ -1,7 +1,7 @@
 #include "ConfigFile.h"
 #include <vector>
 #include <nowide/convert.hpp>
-#include <Windows.h>
+#include <windows.h>
 #include <core/ModMsgBox.h>
 #include <core/Logging.h>
 

@@ -7,11 +7,11 @@
 #include <core/SequenceSearcher.h>
 
 #include <cstring>
-#include <Windows.h>
+#include <windows.h>
 #include <MinHook.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
-#pragma comment(lib, "DbgHelp.lib")
+#pragma comment(lib, "dbghelp.lib")
 
 
 struct FFSAddSourceFlags

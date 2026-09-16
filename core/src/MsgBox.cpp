@@ -1,7 +1,7 @@
 #include <core/MsgBox.h>
 #include <nowide/convert.hpp>
 
-#include <Windows.h>
+#include <windows.h>
 
 
 int MsgBox::Show(void* parent, const std::string& text, unsigned int style)

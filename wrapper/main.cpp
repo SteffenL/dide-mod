@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <windows.h>
 #include "hooks.h"
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)

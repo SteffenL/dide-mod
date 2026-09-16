@@ -24,12 +24,12 @@ bool loadWrappedDll()
 	wchar_t systemDir[MAX_PATH] = {0};
 	GetSystemDirectoryW(systemDir, MAX_PATH);
 	wchar_t originalDllName[] = L"DSOUND.DLL";
-	wchar_t originalDllPath[MAX_PATH] = {0};
-	lstrcatW(originalDllPath, systemDir);
-	lstrcatW(originalDllPath, L"\\");
-	lstrcatW(originalDllPath, originalDllName);
+	std::wstring originalDllPath;
+	originalDllPath += systemDir;
+	originalDllPath += L"\\";
+	originalDllPath += originalDllName;
 
-    auto origDll = LoadLibraryW(originalDllPath);
+    auto origDll = LoadLibraryW(originalDllPath.c_str());
 	if (!origDll) {
 		EZLOGGER << "Failed to load wrapped DLL: " << nowide::narrow(originalDllPath) << std::endl;
         return false;

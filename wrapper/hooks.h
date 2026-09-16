@@ -1,7 +1,7 @@
 #pragma once
 
 #include "wrapped_dll_types.h"
-#include <Windows.h>
+#include <windows.h>
 
 extern OrigFunctions g_origDllFunctions;
 extern HMODULE g_origDll;
