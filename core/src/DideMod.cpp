@@ -63,7 +63,7 @@ DideMod::~DideMod()
 
 bool DideMod::Initialize()
 {
-	initializeLogger(m_config.General.LogFile, m_config.General.EnableLogging);
+	Logger::init(m_config.General.LogFile, m_config.General.EnableLogging);
 	logVersion();
 
 	if (!validateConfig()) {
