@@ -5,7 +5,6 @@ generate_scm_version(
 
 add_library(dm_core STATIC)
 target_sources(dm_core PRIVATE
-    src/Config.cpp
     src/ConfigFile.cpp
     src/DideMod.cpp
     src/DideModInitializer.cpp

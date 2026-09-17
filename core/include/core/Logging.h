@@ -4,7 +4,6 @@
 #include <memory>
 #include <mutex>
 #include <string>
-#include <type_traits>
 
 class Logger final {
 public:

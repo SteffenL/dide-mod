@@ -3,12 +3,7 @@
 #include <string>
 #include <vector>
 
-class Config {
-public:
-    Config();
-    virtual ~Config();
-
-public:
+struct Config {
     struct {
         bool EnableMod;
         bool EnableLogging;
