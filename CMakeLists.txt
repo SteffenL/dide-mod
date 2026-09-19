@@ -6,7 +6,7 @@ endif()
 
 project(dide_mod)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS TRUE)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
@@ -19,6 +19,4 @@ endif()
 include(cmake/scm.cmake)
 
 add_subdirectory(thirdparty)
-add_subdirectory(core)
-add_subdirectory(core_test)
-add_subdirectory(wrapper)
+add_subdirectory(main)
