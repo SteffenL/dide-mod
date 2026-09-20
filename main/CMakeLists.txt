@@ -23,3 +23,5 @@ set_target_properties(dm PROPERTIES
     PREFIX ""
     CXX_VISIBILITY_PRESET hidden
 )
+
+install(TARGETS dm LIBRARY DESTINATION . COMPONENT dm_archive)

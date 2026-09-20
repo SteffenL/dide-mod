@@ -21,4 +21,6 @@ endif()
 include(cmake/scm.cmake)
 
 add_subdirectory(thirdparty)
+add_subdirectory(bundled)
 add_subdirectory(main)
+add_subdirectory(packaging)
