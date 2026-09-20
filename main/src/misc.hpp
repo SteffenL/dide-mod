@@ -83,7 +83,13 @@ public:
 
     pointer_type get() const noexcept { return m_ptr; }
     pointer_type operator->() const noexcept { return m_ptr; }
-    type& operator*() const noexcept { return *m_ptr; }
+
+    template<typename U = type>
+    U& operator*() const noexcept
+        requires(!std::is_void_v<type>)
+    {
+        return *m_ptr;
+    }
 
     template<typename... Args>
     auto operator()(Args&&... args) {

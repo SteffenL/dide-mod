@@ -5,17 +5,17 @@
 #include <filesystem>
 #include <string>
 
-#include <windows.h>
-
 #ifdef __GNUC__
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wcast-function-type"
 #endif
 
+void* gpa_impl(void* module, const char* name);
+
 template<typename T>
-auto gpa(NotNull<HMODULE> dll, const char* name) {
+auto gpa(NotNull<void*> dll, const char* name) {
     using fn_t = std::add_pointer_t<std::remove_pointer_t<T>>;
-    if (auto fn{reinterpret_cast<fn_t>(::GetProcAddress(dll.get(), name))}) {
+    if (auto fn{reinterpret_cast<fn_t>(gpa_impl(dll.get(), name))}) {
         return fn;
     } else {
         throw Error::format("Function not found: {}", name);

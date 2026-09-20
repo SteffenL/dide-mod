@@ -17,6 +17,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <windows.h>
+
 namespace cengine {
 struct FFSAddSourceFlags {
     enum ENUM { Unknown09 = 9 };
