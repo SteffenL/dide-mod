@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include <windows.h>
+#include <dsound.h>
 
 namespace dsound {
 
