@@ -1,10 +1,9 @@
 #include "misc.hpp"
+#include "unicode.hpp"
 
 #include <filesystem>
 #include <string>
 #include <vector>
-
-#include <nowide/convert.hpp>
 
 #include <windows.h>
 // Must come after windows.h
@@ -38,5 +37,5 @@ uintptr_t get_size_of_code(uintptr_t image_base) {
 std::filesystem::path exe_dir() { return exe_path().parent_path(); }
 
 void msgbox_error(const std::string& text, const std::string& title) {
-    ::MessageBoxW(nullptr, nowide::widen(text).c_str(), nowide::widen(title).c_str(), MB_TASKMODAL | MB_ICONERROR);
+    ::MessageBoxW(nullptr, widen_string(text).c_str(), widen_string(title).c_str(), MB_TASKMODAL | MB_ICONERROR);
 }

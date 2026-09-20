@@ -6,9 +6,8 @@
 #include "misc.hpp"
 #include "pattern.hpp"
 #include "platform.hpp"
+#include "unicode.hpp"
 #include "version.hpp"
-
-#include <nowide/convert.hpp>
 
 #include <cstdlib>
 #include <type_traits>
@@ -75,7 +74,7 @@ config::Config load_config() {
     const auto config_file_path{exe_dir() / "dide_mod.ini"};
     auto cfg{config::load_file(config_file_path)};
     if (!cfg) {
-        throw Error::format("Unable to load config file at {}: {}", nowide::narrow(config_file_path.wstring()),
+        throw Error::format("Unable to load config file at {}: {}", narrow_string(config_file_path.wstring()),
                             cfg.error().what());
     }
     return std::move(cfg).value();
@@ -95,13 +94,13 @@ void log_config(const config::Config& cfg) {
         LOG("  General:");
         LOG("    EnableMod = {}", cfg.general.enable_mod);
         LOG("    EnableLogging = {}", cfg.general.enable_logging);
-        LOG("    LogFile = {}", nowide::narrow(cfg.general.log_file.wstring()));
+        LOG("    LogFile = {}", narrow_string(cfg.general.log_file.wstring()));
         LOG("  Features:");
         LOG("    DeveloperMenu = {}", cfg.features.developer_menu);
         LOG("    CustomPak = {}", cfg.features.custom_pak);
         LOG("  CustomPak:");
         for (const auto& pak : cfg.load_custom_paks) {
-            LOG("    {}", nowide::narrow(pak.wstring()));
+            LOG("    {}", narrow_string(pak.wstring()));
         }
     });
 }

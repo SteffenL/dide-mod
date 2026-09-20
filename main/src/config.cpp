@@ -3,8 +3,6 @@
 
 #include <filesystem>
 
-#include <nowide/convert.hpp>
-
 #include <windows.h>
 
 namespace config {

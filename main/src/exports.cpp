@@ -1,10 +1,9 @@
 #include "exports.hpp"
 #include "dsound.hpp"
 #include "misc.hpp"
+#include "unicode.hpp"
 
 #include <optional>
-
-#include <nowide/convert.hpp>
 
 using namespace dsound;
 
@@ -18,7 +17,7 @@ struct DSoundWrapper {
             return load_dsound_functions(dll_handle).transform([](auto fn) { return DSoundWrapper{fn}; });
         } catch (const std::exception& ex) {
             return std::unexpected{Error::format("Failed to load wrapped DLL at {}: {}",
-                                                 nowide::narrow(dll_path.wstring()), ex.what())};
+                                                 narrow_string(dll_path.wstring()), ex.what())};
         }
     }
 };

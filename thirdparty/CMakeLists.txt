@@ -11,9 +11,4 @@ FetchContent_Declare(
     SYSTEM
 )
 
-FetchContent_Declare(nowide
-    URL https://github.com/boostorg/nowide/releases/download/v11.3.1/nowide_standalone_v11.3.1.tar.gz
-    URL_HASH SHA256=eaec4d331e3961f5eeb10c46a11691d62047900a7a40765b0f23cdd3181e6ca6
-)
-
-FetchContent_MakeAvailable(minhook nowide)
+FetchContent_MakeAvailable(minhook)

@@ -15,9 +15,10 @@ target_sources(dm PRIVATE
     src/minhook.cpp
     src/mod.cpp
     src/platform.cpp
+    src/unicode.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.cpp"
 )
-target_link_libraries(dm PRIVATE dbghelp shlwapi minhook nowide)
+target_link_libraries(dm PRIVATE dbghelp shlwapi minhook)
 set_target_properties(dm PROPERTIES
     OUTPUT_NAME dsound
     PREFIX ""
