@@ -4,7 +4,10 @@
 #include <stdexcept>
 #include <system_error>
 
-#define NOMINMAX
+#ifndef NOMINMAX
+    #define NOMINMAX
+#endif
+
 #include <windows.h>
 
 std::wstring widen_string(std::string_view input) {
