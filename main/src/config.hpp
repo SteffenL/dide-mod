@@ -1,7 +1,5 @@
 #pragma once
 
-#include "misc.hpp"
-
 #include <filesystem>
 #include <vector>
 
@@ -22,6 +20,6 @@ struct Config {
     std::vector<std::filesystem::path> load_custom_paks;
 };
 
-Result<Config> load_file(const std::filesystem::path& file_path);
+Config load_file(const std::filesystem::path& file_path);
 
 } // namespace config

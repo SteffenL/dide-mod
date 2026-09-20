@@ -4,12 +4,12 @@
 
 #include <filesystem>
 
-#include <windows.h>
 #include <dsound.h>
+#include <windows.h>
 
 namespace dsound {
 
-Result<DSoundFunctions> load_dsound_functions(NotNull<HMODULE> dll) {
+DSoundFunctions load_dsound_functions(NotNull<HMODULE> dll) {
     try {
         return DSoundFunctions{
             .DirectSoundCreate = gpa<DirectSoundCreate_t>(dll, "DirectSoundCreate"),
@@ -26,7 +26,7 @@ Result<DSoundFunctions> load_dsound_functions(NotNull<HMODULE> dll) {
             .DllGetClassObject = gpa<DllGetClassObject_t>(dll, "DllGetClassObject"),
         };
     } catch (const std::exception& ex) {
-        return std::unexpected{Error::format("Failed to load dsound function(s): {}", ex.what())};
+        throw Error::format("Failed to load dsound function(s): {}", ex.what());
     }
 }
 

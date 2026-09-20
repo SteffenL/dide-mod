@@ -78,19 +78,11 @@ bool* g_dev_menu_enabled{};
 
 config::Config load_config() {
     const auto config_file_path{exe_dir() / "dide_mod.ini"};
-    auto cfg{config::load_file(config_file_path)};
-    if (!cfg) {
+    try {
+        return config::load_file(config_file_path);
+    } catch (const std::exception& ex) {
         throw Error::format("Unable to load config file at {}: {}", narrow_string(config_file_path.wstring()),
-                            cfg.error().what());
-    }
-    return std::move(cfg).value();
-}
-
-HostAppInfo load_host_info() {
-    if (auto result{load_host_app_info()}) {
-        return std::move(result.value());
-    } else {
-        throw result.error();
+                            ex.what());
     }
 }
 
@@ -133,7 +125,7 @@ void load_paks(const config::Config& cfg) {
 
 bool ce_fs_add_source_detour(const char* path, cengine::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
-        LOG_PARTIAL("Adding source: \"{}\" {}", path, std::to_underlying(flags));
+        LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
         const auto result{g_cengine_original->fs.add_source(path, flags)};
         LOG_PARTIAL(" (returned {})\n", result);
         return result;
@@ -220,7 +212,7 @@ void create_mod() {
         return;
     }
 
-    g_host_info = load_host_info();
+    g_host_info = load_host_app_info();
     log_host_info(g_host_info);
     g_cengine = load_cengine_functions(g_host_info);
     log_cengine_functions(*g_cengine);

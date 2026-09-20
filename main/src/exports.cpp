@@ -10,14 +10,13 @@ using namespace dsound;
 struct DSoundWrapper {
     DSoundFunctions fn;
 
-    static Result<DSoundWrapper> create() {
+    static DSoundWrapper create() {
         const auto dll_path{get_system_dsound_dll_path()};
         try {
             const NotNull<HMODULE> dll_handle{::LoadLibraryW(dll_path.c_str())};
-            return load_dsound_functions(dll_handle).transform([](auto fn) { return DSoundWrapper{fn}; });
+            return DSoundWrapper{load_dsound_functions(dll_handle)};
         } catch (const std::exception& ex) {
-            return std::unexpected{Error::format("Failed to load wrapped DLL at {}: {}",
-                                                 narrow_string(dll_path.wstring()), ex.what())};
+            throw Error::format("Failed to load wrapped DLL at {}: {}", narrow_string(dll_path.wstring()), ex.what());
         }
     }
 };
@@ -27,10 +26,10 @@ std::optional<DSoundWrapper> g_wrapper;
 }
 
 void create_dsound_wrapper() {
-    if (auto res{DSoundWrapper::create()}) {
-        g_wrapper = res.value();
-    } else {
-        throw Error::format("Failed to create dsound wrapper: {}", res.error().what());
+    try {
+        g_wrapper = DSoundWrapper::create();
+    } catch (const std::exception& ex) {
+        throw Error::format("Failed to create dsound wrapper: {}", ex.what());
     }
 }
 

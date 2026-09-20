@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <expected>
 #include <format>
 #include <functional>
 #include <source_location>
@@ -61,9 +60,6 @@ public:
 private:
     SourceLocation m_loc;
 };
-
-template<typename T>
-using Result = std::expected<T, Error>;
 
 template<typename T>
 class NotNull {

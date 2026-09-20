@@ -42,7 +42,7 @@ struct DSoundFunctions {
     NotNull<DllGetClassObject_t> DllGetClassObject;
 };
 
-Result<DSoundFunctions> load_dsound_functions(NotNull<HMODULE> dll);
+DSoundFunctions load_dsound_functions(NotNull<HMODULE> dll);
 std::filesystem::path get_system_dsound_dll_path();
 
 } // namespace dsound

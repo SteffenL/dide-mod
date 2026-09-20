@@ -33,7 +33,7 @@ std::wstring ini_read_string(const std::filesystem::path& file_path, const wchar
 }
 
 void ini_enum_keys(const std::filesystem::path& file_path, const wchar_t* section_name,
-                   std::move_only_function<void(std::wstring)> cb) {
+                   std::function<void(std::wstring)> cb) {
     std::array<wchar_t, 1024> key_names_buffer{};
     ::GetPrivateProfileStringW(section_name, NULL, NULL, key_names_buffer.data(),
                                static_cast<DWORD>(key_names_buffer.size()), file_path.c_str());
@@ -81,7 +81,7 @@ void load_custom_pak(Config& config, const std::filesystem::path& file_path) {
     });
 }
 
-Result<Config> load_file(const std::filesystem::path& file_path) {
+Config load_file(const std::filesystem::path& file_path) {
     Config config;
     load_general(config, file_path);
     load_features(config, file_path);
