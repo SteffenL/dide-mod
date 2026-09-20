@@ -230,6 +230,10 @@ void create_mod() {
 }
 
 void destroy_mod() {
+    if (!g_config.general.enable_mod) {
+        return;
+    }
+
     if (g_config.features.developer_menu) {
         set_dev_menu_enabled(false);
     }
