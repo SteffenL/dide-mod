@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 845e3c7..2a2e341 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -88,7 +88,7 @@ else()
+   set_target_properties(minhook PROPERTIES POSTFIX "")
+   set_target_properties(minhook PROPERTIES DEBUG_POSTFIX "d")
+ endif()
+-
++return()
+ ################
+ # CMAKE CONFIG # 
+ ################

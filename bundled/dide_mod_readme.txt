@@ -23,5 +23,5 @@ Open the config file "dide_mod.ini" with a text editor (e.g. Notepad) to customi
 Developer
 --------------------------------------------------------------------------------
 
-Steffen André langnes
+Steffen AndrÃ© langnes
 https://www.steffenl.com
