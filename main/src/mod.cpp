@@ -185,7 +185,8 @@ bool* find_dev_menu_enable() {
 
     const auto match_offset{find_pattern("740CC605??????0001E9BC0500008BDE", code_range)};
     if (!match_offset) {
-        throw Error{"Could not find developer menu offset"};
+        LOG("Could not find developer menu offset");
+        return nullptr;
     }
 
     const uintptr_t rip{code_start + *match_offset + 2 + 7};
@@ -197,8 +198,10 @@ bool* find_dev_menu_enable() {
 }
 
 void set_dev_menu_enabled(bool enable) {
-    LOG("Setting dev menu enabled to {}.", enable);
-    *g_dev_menu_enabled = enable;
+    if (g_dev_menu_enabled) {
+        LOG("Setting dev menu enabled to {}.", enable);
+        *g_dev_menu_enabled = enable;
+    }
 }
 
 void create_mod() {
@@ -218,9 +221,11 @@ void create_mod() {
     log_cengine_functions(*g_cengine);
     add_hooks();
 
-    g_dev_menu_enabled = find_dev_menu_enable();
-    if (g_config.features.developer_menu) {
-        set_dev_menu_enabled(true);
+    if (auto found{find_dev_menu_enable()}) {
+        g_dev_menu_enabled = found;
+        if (g_config.features.developer_menu) {
+            set_dev_menu_enabled(true);
+        }
     }
 }
 
