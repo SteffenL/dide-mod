@@ -21,6 +21,11 @@ endif()
 include(cmake/scm.cmake)
 
 add_subdirectory(thirdparty)
+
+if(NOT MSVC)
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 add_subdirectory(bundled)
 add_subdirectory(main)
 add_subdirectory(packaging)
