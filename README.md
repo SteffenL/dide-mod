@@ -2,6 +2,12 @@
 
 The original simple pak loader for Dead Island Definitive Edition game series and accidentally also Dying Light.
 
+## Requirements
+
+* C++20 compiler
+* CMake
+* Ninja
+
 ## Building
 
 ### Linux/MinGW
