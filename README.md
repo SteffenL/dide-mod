@@ -2,6 +2,11 @@
 
 The original simple pak loader for Dead Island Definitive Edition game series and accidentally also Dying Light.
 
+# Features
+
+* Load custom pak files (DI and DL).
+* Enable the in-game developer menu (DI).
+
 ## Requirements
 
 * C++20 compiler
