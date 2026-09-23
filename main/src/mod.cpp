@@ -72,7 +72,7 @@ constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
 std::optional<cengine::Functions<NotNull>> g_cengine;
-std::optional<cengine::Functions<std::type_identity_t>> g_cengine_original;
+cengine::Functions<std::type_identity_t> g_cengine_original;
 bool* g_dev_menu_enabled{};
 } // namespace
 
@@ -117,7 +117,7 @@ void load_paks(const config::Config& cfg) {
         const auto* pak_path_c{reinterpret_cast<const char*>(pak_path_utf8.c_str())};
         LOG_TX([&] {
             LOG_PARTIAL("Adding custom source: {}", pak_path_c);
-            const auto loaded{g_cengine_original->fs.add_source(pak_path_c, cengine::FFSAddSourceFlags::Unknown09)};
+            const auto loaded{g_cengine_original.fs.add_source(pak_path_c, cengine::FFSAddSourceFlags::Unknown09)};
             LOG_PARTIAL(" ({})\n", loaded ? "OK" : "error");
         });
     }
@@ -126,7 +126,7 @@ void load_paks(const config::Config& cfg) {
 bool ce_fs_add_source_detour(const char* path, cengine::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
         LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
-        const auto result{g_cengine_original->fs.add_source(path, flags)};
+        const auto result{g_cengine_original.fs.add_source(path, flags)};
         LOG_PARTIAL(" (returned {})\n", result);
         return result;
     });
@@ -134,7 +134,7 @@ bool ce_fs_add_source_detour(const char* path, cengine::FFSAddSourceFlags::ENUM 
 
 void ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
     load_paks(g_config);
-    g_cengine_original->engine.InitializeGameScript(p1, p2);
+    g_cengine_original.engine.InitializeGameScript(p1, p2);
 }
 
 cengine::Functions<NotNull> load_cengine_functions(const HostAppInfo& info) {
@@ -159,9 +159,9 @@ void log_cengine_functions(const T& funcs) {
 void add_hooks() {
     minhook::initialize();
     minhook::create_hook("fs.add_source", g_cengine->fs.add_source.get(), ce_fs_add_source_detour,
-                         g_cengine_original->fs.add_source);
+                         g_cengine_original.fs.add_source);
     minhook::create_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get(),
-                         ce_engine_InitializeGameScript_detour, g_cengine_original->engine.InitializeGameScript);
+                         ce_engine_InitializeGameScript_detour, g_cengine_original.engine.InitializeGameScript);
     minhook::queue_enable_hook("fs.add_source", g_cengine->fs.add_source.get());
     minhook::queue_enable_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get());
     minhook::apply_queued();
