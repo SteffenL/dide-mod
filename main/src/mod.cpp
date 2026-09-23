@@ -105,6 +105,8 @@ void log_config(const config::Config& cfg) {
 
 void log_host_info(const HostAppInfo& info) {
     LOG_TX([&] {
+        LOG("Host app ID: {}", info.id);
+        LOG("Host app version: {}.{}.{}", info.version.major, info.version.minor, info.version.patch);
         LOG("Game DLL image base: {:#x}", info.game_dll);
         LOG("Engine DLL image base: {:#x}", info.engine_dll);
         LOG("Filesystem DLL image base: {:#x}", info.filesystem_dll);

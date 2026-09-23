@@ -1,7 +1,10 @@
 #include "unicode.hpp"
 
+#include <array>
 #include <limits>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <system_error>
 
 #ifndef NOMINMAX
@@ -54,3 +57,18 @@ std::string narrow_string(std::wstring_view input) {
     const auto ec{static_cast<int>(::GetLastError())};
     throw std::system_error{ec, std::system_category(), "WideCharToMultiByte failed"};
 }
+
+template<typename T>
+std::basic_string_view<T> trim_right(std::basic_string_view<T> s) {
+    static constexpr std::array<T, 6> ws = {
+        T{'\t'}, T{'\n'}, T{'\v'}, T{'\f'}, T{'\r'}, T{' '},
+    };
+    if (const auto non_ws_pos{s.find_last_not_of(std::basic_string_view<T>{ws.data(), ws.size()})};
+        non_ws_pos != std::basic_string_view<T>::npos) {
+        return s.substr(0, non_ws_pos);
+    }
+    return s;
+}
+
+template std::basic_string_view<char> trim_right(std::basic_string_view<char> s);
+template std::basic_string_view<wchar_t> trim_right(std::basic_string_view<wchar_t> s);
