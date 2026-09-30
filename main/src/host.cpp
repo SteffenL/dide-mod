@@ -27,14 +27,13 @@ HostAppInfo load_host_app_info() {
     const auto version_size{::GetFileVersionInfoSizeW(main_exe_file_name.data(), NULL)};
     if (version_size > 0) {
         std::vector<uint8_t> version_block(version_size, 0);
-        ::GetFileVersionInfoW(main_exe_file_name.data(), NULL, version_size, version_block.data());
+        ::GetFileVersionInfoW(main_exe_file_name.data(), 0, version_size, version_block.data());
 
         VS_FIXEDFILEINFO* file_info{};
         UINT file_info_size{};
         ::VerQueryValueW(version_block.data(), L"\\", reinterpret_cast<LPVOID*>(&file_info), &file_info_size);
         if (file_info && file_info_size > 0) {
-            const auto sig{file_info->dwSignature};
-            assert(sig == 0xfeef04bd);
+            assert(file_info->dwSignature == 0xfeef04bd);
             host_version = HostAppInfo::Version{
                 .major = HIWORD(file_info->dwFileVersionMS),
                 .minor = LOWORD(file_info->dwFileVersionMS),
@@ -76,27 +75,9 @@ HostAppInfo load_host_app_info() {
         throw Error{"Unable to determine host app version"};
     }
 
-    const auto game_dll{::GetModuleHandleA("gamedll_x64_rwdi.dll")};
-    if (!game_dll) {
-        throw Error{"Game DLL is not loaded"};
-    }
-
-    const auto engine_dll{::GetModuleHandleA("engine_x64_rwdi.dll")};
-    if (!engine_dll) {
-        throw Error{"Engine DLL is not loaded"};
-    }
-
-    const auto filesystem_dll{::GetModuleHandleA("filesystem_x64_rwdi.dll")};
-    if (!filesystem_dll) {
-        throw Error{"File system DLL is not loaded"};
-    }
-
     return HostAppInfo{
         .id = std::move(host_id),
         .version = host_version.value(),
         .main_exe = reinterpret_cast<uintptr_t>(main_exe),
-        .game_dll = reinterpret_cast<uintptr_t>(game_dll),
-        .engine_dll = reinterpret_cast<uintptr_t>(engine_dll),
-        .filesystem_dll = reinterpret_cast<uintptr_t>(filesystem_dll),
     };
 }

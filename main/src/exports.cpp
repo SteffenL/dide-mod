@@ -1,38 +1,22 @@
 #include "exports.hpp"
 #include "dsound.hpp"
+#include "dynlib.hpp"
 #include "misc.hpp"
-#include "unicode.hpp"
 
 #include <optional>
 
 using namespace dsound;
 
 struct DSoundWrapper {
-    DSoundFunctions fn;
-
-    static DSoundWrapper create() {
-        const auto dll_path{get_system_dsound_dll_path()};
-        try {
-            const NotNull<HMODULE> dll_handle{::LoadLibraryW(dll_path.c_str())};
-            return DSoundWrapper{load_dsound_functions(dll_handle)};
-        } catch (const std::exception& ex) {
-            throw Error::format("Failed to load wrapped DLL at {}: {}", narrow_string(dll_path.wstring()), ex.what());
-        }
-    }
+    DynLib lib{get_system_dsound_dll_path()};
+    Functions<NotNull> fn{lib};
 };
 
 namespace {
 std::optional<DSoundWrapper> g_wrapper;
 }
 
-void create_dsound_wrapper() {
-    try {
-        g_wrapper = DSoundWrapper::create();
-    } catch (const std::exception& ex) {
-        throw Error::format("Failed to create dsound wrapper: {}", ex.what());
-    }
-}
-
+void create_dsound_wrapper() { g_wrapper = DSoundWrapper{}; }
 void destroy_dsound_wrapper() { g_wrapper.reset(); }
 
 extern "C" {

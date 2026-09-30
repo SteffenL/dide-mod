@@ -1,3 +1,4 @@
+#include "platform.hpp"
 #include "misc.hpp"
 #include "unicode.hpp"
 
@@ -8,10 +9,6 @@
 #include <windows.h>
 // Must come after windows.h
 #include <dbghelp.h>
-
-void* gpa_impl(void* module, const char* name) {
-    return reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(module), name));
-}
 
 std::filesystem::path exe_path() {
     std::vector<wchar_t> buffer(MAX_PATH, '\0');

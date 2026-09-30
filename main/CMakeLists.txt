@@ -7,6 +7,7 @@ add_library(dm MODULE)
 target_sources(dm PRIVATE
     src/config.cpp
     src/dsound.cpp
+    src/dynlib.cpp
     src/exports.cpp
     src/exports.def
     src/host.cpp

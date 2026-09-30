@@ -1,4 +1,5 @@
 #include "mod.hpp"
+#include "cengine.hpp"
 #include "config.hpp"
 #include "host.hpp"
 #include "log.hpp"
@@ -15,47 +16,6 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
-#include <utility>
-
-#include <windows.h>
-
-namespace cengine {
-struct FFSAddSourceFlags {
-    enum ENUM { Unknown09 = 9 };
-};
-
-using fs_add_source_t = bool (*)(const char* path, FFSAddSourceFlags::ENUM flags);
-using engine_InitializeGameScript_t = void (*)(void* p1, void* p2);
-
-template<template<typename> typename Wrapper>
-struct FsFunctions {
-    Wrapper<fs_add_source_t> add_source;
-};
-
-template<template<typename> typename Wrapper>
-struct EngineFunctions {
-    Wrapper<engine_InitializeGameScript_t> InitializeGameScript;
-};
-
-template<template<typename> typename Wrapper>
-struct Functions {
-    FsFunctions<Wrapper> fs;
-    EngineFunctions<Wrapper> engine;
-};
-
-FsFunctions<NotNull> load_fs_functions(NotNull<HMODULE> dll) {
-    return {
-        .add_source = gpa<fs_add_source_t>(dll.get(), "?add_source@fs@@YA_NPEBDW4ENUM@FFSAddSourceFlags@@@Z"),
-    };
-}
-
-EngineFunctions<NotNull> load_engine_functions(NotNull<HMODULE> dll) {
-    return {
-        .InitializeGameScript = gpa<engine_InitializeGameScript_t>(dll.get(), "InitializeGameScript"),
-    };
-}
-
-} // namespace cengine
 
 void log_version() { LOG("Core version: {}", project_get_version()); }
 
@@ -71,8 +31,9 @@ namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
-std::optional<cengine::Functions<NotNull>> g_cengine;
-cengine::Functions<std::type_identity_t> g_cengine_original;
+std::optional<cengine::CEngineLibraries> g_cengine;
+cengine::engine::Functions<std::type_identity_t> g_cengine_engine_original;
+cengine::fs::Functions<std::type_identity_t> g_cengine_fs_original;
 bool* g_dev_menu_enabled{};
 } // namespace
 
@@ -107,9 +68,6 @@ void log_host_info(const HostAppInfo& info) {
     LOG_TX([&] {
         LOG("Host app ID: {}", info.id);
         LOG("Host app version: {}.{}.{}", info.version.major, info.version.minor, info.version.patch);
-        LOG("Game DLL image base: {:#x}", info.game_dll);
-        LOG("Engine DLL image base: {:#x}", info.engine_dll);
-        LOG("Filesystem DLL image base: {:#x}", info.filesystem_dll);
     });
 }
 
@@ -119,16 +77,16 @@ void load_paks(const config::Config& cfg) {
         const auto* pak_path_c{reinterpret_cast<const char*>(pak_path_utf8.c_str())};
         LOG_TX([&] {
             LOG_PARTIAL("Adding custom source: {}", pak_path_c);
-            const auto loaded{g_cengine_original.fs.add_source(pak_path_c, cengine::FFSAddSourceFlags::Unknown09)};
+            const auto loaded{g_cengine_fs_original.add_source(pak_path_c, cengine::fs::FFSAddSourceFlags::Unknown09)};
             LOG_PARTIAL(" ({})\n", loaded ? "OK" : "error");
         });
     }
 }
 
-bool ce_fs_add_source_detour(const char* path, cengine::FFSAddSourceFlags::ENUM flags) {
+bool ce_fs_add_source_detour(const char* path, cengine::fs::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
         LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
-        const auto result{g_cengine_original.fs.add_source(path, flags)};
+        const auto result{g_cengine_fs_original.add_source(path, flags)};
         LOG_PARTIAL(" (returned {})\n", result);
         return result;
     });
@@ -136,51 +94,32 @@ bool ce_fs_add_source_detour(const char* path, cengine::FFSAddSourceFlags::ENUM 
 
 void ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
     load_paks(g_config);
-    g_cengine_original.engine.InitializeGameScript(p1, p2);
-}
-
-cengine::Functions<NotNull> load_cengine_functions(const HostAppInfo& info) {
-    using namespace cengine;
-    return {
-        .fs = load_fs_functions(reinterpret_cast<HMODULE>(info.filesystem_dll)),
-        .engine = load_engine_functions(reinterpret_cast<HMODULE>(info.engine_dll)),
-    };
-}
-
-template<typename T>
-void log_cengine_functions(const T& funcs) {
-    LOG_TX([&] {
-        LOG("CEngine functions:");
-        LOG("  fs:");
-        LOG("    add_source: {:#x}", reinterpret_cast<uintptr_t>(funcs.fs.add_source.get()));
-        LOG("  engine:");
-        LOG("    InitializeGameScript: {:#x}", reinterpret_cast<uintptr_t>(funcs.engine.InitializeGameScript.get()));
-    });
+    g_cengine_engine_original.InitializeGameScript(p1, p2);
 }
 
 void add_hooks() {
     minhook::initialize();
-    minhook::create_hook("fs.add_source", g_cengine->fs.add_source.get(), ce_fs_add_source_detour,
-                         g_cengine_original.fs.add_source);
-    minhook::create_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get(),
-                         ce_engine_InitializeGameScript_detour, g_cengine_original.engine.InitializeGameScript);
-    minhook::queue_enable_hook("fs.add_source", g_cengine->fs.add_source.get());
-    minhook::queue_enable_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get());
+    minhook::create_hook("fs.add_source", g_cengine->filesystem.fn.add_source.get(), ce_fs_add_source_detour,
+                         g_cengine_fs_original.add_source);
+    minhook::create_hook("engine.InitializeGameScript", g_cengine->engine.fn.InitializeGameScript.get(),
+                         ce_engine_InitializeGameScript_detour, g_cengine_engine_original.InitializeGameScript);
+    minhook::queue_enable_hook("fs.add_source", g_cengine->filesystem.fn.add_source.get());
+    minhook::queue_enable_hook("engine.InitializeGameScript", g_cengine->engine.fn.InitializeGameScript.get());
     minhook::apply_queued();
 }
 
 void remove_hooks() {
-    minhook::queue_disable_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get());
-    minhook::queue_disable_hook("fs.add_source", g_cengine->fs.add_source.get());
+    minhook::queue_disable_hook("engine.InitializeGameScript", g_cengine->engine.fn.InitializeGameScript.get());
+    minhook::queue_disable_hook("fs.add_source", g_cengine->filesystem.fn.add_source.get());
     minhook::apply_queued();
-    minhook::remove_hook("engine.InitializeGameScript", g_cengine->engine.InitializeGameScript.get());
-    minhook::remove_hook("fs.add_source", g_cengine->fs.add_source.get());
+    minhook::remove_hook("engine.InitializeGameScript", g_cengine->engine.fn.InitializeGameScript.get());
+    minhook::remove_hook("fs.add_source", g_cengine->filesystem.fn.add_source.get());
     minhook::uninitialize();
 }
 
 bool* find_dev_menu_enable() {
-    const auto code_start{get_base_of_code(g_host_info.game_dll)};
-    const auto code_end{code_start + get_size_of_code(g_host_info.game_dll)};
+    const auto code_start{get_base_of_code(g_cengine->game.lib.address())};
+    const auto code_end{code_start + get_size_of_code(g_cengine->game.lib.address())};
     const std::span code_range{reinterpret_cast<const char*>(code_start), reinterpret_cast<const char*>(code_end)};
 
     LOG("Searching for developer menu offset from {:#x} to {:#x}...", code_start, code_end);
@@ -206,21 +145,22 @@ void set_dev_menu_enabled(bool enable) {
     }
 }
 
-void create_mod() {
+void init() {
     g_config = load_config();
     Logger::init(g_config.general.log_file, g_config.general.enable_logging);
     log_version();
     validate_config(g_config);
     log_config(g_config);
+}
 
+void create_mod() {
     if (!g_config.general.enable_mod) {
         return;
     }
 
     g_host_info = load_host_app_info();
     log_host_info(g_host_info);
-    g_cengine = load_cengine_functions(g_host_info);
-    log_cengine_functions(*g_cengine);
+    g_cengine = cengine::CEngineLibraries{};
     add_hooks();
 
     if (auto found{find_dev_menu_enable()}) {
@@ -241,6 +181,7 @@ void destroy_mod() {
     }
 
     remove_hooks();
+    g_cengine.reset();
 }
 
 void on_init_error() noexcept {

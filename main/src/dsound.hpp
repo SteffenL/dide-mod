@@ -1,6 +1,6 @@
 #pragma once
 
-#include "misc.hpp"
+#include "dynlib.hpp"
 
 #include <filesystem>
 
@@ -27,22 +27,37 @@ using GetDeviceID_t = HRESULT WINAPI(LPCGUID pGuidSrc, LPGUID pGuidDest);
 using DllCanUnloadNow_t = HRESULT();
 using DllGetClassObject_t = HRESULT(REFCLSID rclsid, REFIID riid, LPVOID* ppv);
 
-struct DSoundFunctions {
-    NotNull<DirectSoundCreate_t> DirectSoundCreate;
-    NotNull<DirectSoundEnumerateA_t> DirectSoundEnumerateA;
-    NotNull<DirectSoundEnumerateW_t> DirectSoundEnumerateW;
-    NotNull<DirectSoundCaptureCreate_t> DirectSoundCaptureCreate;
-    NotNull<DirectSoundCaptureEnumerateA_t> DirectSoundCaptureEnumerateA;
-    NotNull<DirectSoundCaptureEnumerateW_t> DirectSoundCaptureEnumerateW;
-    NotNull<DirectSoundCreate8_t> DirectSoundCreate8;
-    NotNull<DirectSoundCaptureCreate8_t> DirectSoundCaptureCreate8;
-    NotNull<DirectSoundFullDuplexCreate_t> DirectSoundFullDuplexCreate;
-    NotNull<GetDeviceID_t> GetDeviceID;
-    NotNull<DllCanUnloadNow_t> DllCanUnloadNow;
-    NotNull<DllGetClassObject_t> DllGetClassObject;
+template<template<typename> typename Wrapper>
+struct Functions {
+    Functions() = default;
+    Functions(const DynLib& lib)
+            : DirectSoundCreate{lib.sym<DirectSoundCreate_t>("DirectSoundCreate")},
+              DirectSoundEnumerateA{lib.sym<DirectSoundEnumerateA_t>("DirectSoundEnumerateA")},
+              DirectSoundEnumerateW{lib.sym<DirectSoundEnumerateW_t>("DirectSoundEnumerateW")},
+              DirectSoundCaptureCreate{lib.sym<DirectSoundCaptureCreate_t>("DirectSoundCaptureCreate")},
+              DirectSoundCaptureEnumerateA{lib.sym<DirectSoundCaptureEnumerateA_t>("DirectSoundCaptureEnumerateA")},
+              DirectSoundCaptureEnumerateW{lib.sym<DirectSoundCaptureEnumerateW_t>("DirectSoundCaptureEnumerateW")},
+              DirectSoundCreate8{lib.sym<DirectSoundCreate8_t>("DirectSoundCreate8")},
+              DirectSoundCaptureCreate8{lib.sym<DirectSoundCaptureCreate8_t>("DirectSoundCaptureCreate8")},
+              DirectSoundFullDuplexCreate{lib.sym<DirectSoundFullDuplexCreate_t>("DirectSoundFullDuplexCreate")},
+              GetDeviceID{lib.sym<GetDeviceID_t>("GetDeviceID")},
+              DllCanUnloadNow{lib.sym<DllCanUnloadNow_t>("DllCanUnloadNow")},
+              DllGetClassObject{lib.sym<DllGetClassObject_t>("DllGetClassObject")} {}
+
+    Wrapper<DirectSoundCreate_t> DirectSoundCreate;
+    Wrapper<DirectSoundEnumerateA_t> DirectSoundEnumerateA;
+    Wrapper<DirectSoundEnumerateW_t> DirectSoundEnumerateW;
+    Wrapper<DirectSoundCaptureCreate_t> DirectSoundCaptureCreate;
+    Wrapper<DirectSoundCaptureEnumerateA_t> DirectSoundCaptureEnumerateA;
+    Wrapper<DirectSoundCaptureEnumerateW_t> DirectSoundCaptureEnumerateW;
+    Wrapper<DirectSoundCreate8_t> DirectSoundCreate8;
+    Wrapper<DirectSoundCaptureCreate8_t> DirectSoundCaptureCreate8;
+    Wrapper<DirectSoundFullDuplexCreate_t> DirectSoundFullDuplexCreate;
+    Wrapper<GetDeviceID_t> GetDeviceID;
+    Wrapper<DllCanUnloadNow_t> DllCanUnloadNow;
+    Wrapper<DllGetClassObject_t> DllGetClassObject;
 };
 
-DSoundFunctions load_dsound_functions(NotNull<HMODULE> dll);
 std::filesystem::path get_system_dsound_dll_path();
 
 } // namespace dsound

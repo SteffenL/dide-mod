@@ -4,10 +4,12 @@
 
 #include <windows.h>
 
-BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/) {
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID /*lpvReserved*/) {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
+        ::DisableThreadLibraryCalls(hinstDLL);
         if (invoke_and_log_exception([] {
+                init();
                 create_dsound_wrapper();
                 create_mod();
             })) {
@@ -16,8 +18,10 @@ BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserve
         }
         break;
     case DLL_PROCESS_DETACH:
-        destroy_mod();
-        destroy_dsound_wrapper();
+        invoke_and_log_exception([] {
+            destroy_mod();
+            destroy_dsound_wrapper();
+        });
         break;
     }
     return TRUE;
