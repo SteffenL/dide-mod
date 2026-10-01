@@ -6,7 +6,16 @@
 namespace cengine {
 namespace fs {
 struct FFSAddSourceFlags {
-    enum ENUM { Unknown09 = 9 };
+    // Some names discovered in debug info of Dead Island, others unconfirmed
+    enum ENUM {
+        SUBDIRS = 1,
+        APPEND = 2,
+        STRIP_LAST_DIR = 4,
+        BROWSABLE = 8,
+        ALLOW_DUPLICATES = 16,
+        PRELOAD = 32,
+        CACHE = 64, // Guess based on: if fs_cache_enabled && (flags & 0x40) == 0 then init_cache()
+    };
 };
 
 using add_source_t = bool (*)(const char* path, FFSAddSourceFlags::ENUM flags);

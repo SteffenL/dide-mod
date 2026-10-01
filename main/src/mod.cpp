@@ -72,12 +72,15 @@ void log_host_info(const HostAppInfo& info) {
 }
 
 void load_paks(const config::Config& cfg) {
+    using cengine::fs::FFSAddSourceFlags;
     for (const auto& pak_path : cfg.load_custom_paks) {
         const auto pak_path_utf8{pak_path.u8string()};
         const auto* pak_path_c{reinterpret_cast<const char*>(pak_path_utf8.c_str())};
         LOG_TX([&] {
             LOG_PARTIAL("Adding custom source: {}", pak_path_c);
-            const auto loaded{g_cengine_fs_original.add_source(pak_path_c, cengine::fs::FFSAddSourceFlags::Unknown09)};
+            const auto flags{static_cast<FFSAddSourceFlags::ENUM>(FFSAddSourceFlags::SUBDIRS |
+                                                                  FFSAddSourceFlags::BROWSABLE)};
+            const auto loaded{g_cengine_fs_original.add_source(pak_path_c, flags)};
             LOG_PARTIAL(" ({})\n", loaded ? "OK" : "error");
         });
     }
