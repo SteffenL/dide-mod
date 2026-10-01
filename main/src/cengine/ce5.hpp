@@ -44,14 +44,14 @@ struct Functions {
 
 struct Libraries {
     struct {
-        DynLib lib{DynLib::from_loaded(exe_dir() / "game_x86_rwdi.dll")};
+        DynLib lib{DynLib{"game_x86_rwdi.dll"}};
     } game;
     struct {
-        DynLib lib{DynLib::from_loaded(exe_dir() / "engine_x86_rwdi.dll")};
+        DynLib lib{DynLib{"engine_x86_rwdi.dll"}};
         engine::Functions<NotNull> fn{lib};
     } engine;
     struct {
-        DynLib lib{DynLib::from_loaded(exe_dir() / "filesystem_x87_rwdi.dll")};
+        DynLib lib{DynLib{"filesystem_x87_rwdi.dll"}};
         fs::Functions<NotNull> fn{lib};
     } filesystem;
 };

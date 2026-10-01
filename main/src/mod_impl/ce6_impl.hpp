@@ -9,8 +9,8 @@ public:
     ~Ce6ModImpl();
     Ce6ModImpl(const Ce6ModImpl&) noexcept = delete;
     Ce6ModImpl& operator=(const Ce6ModImpl&) noexcept = delete;
-    Ce6ModImpl(Ce6ModImpl&&) noexcept = default;
-    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept = default;
+    Ce6ModImpl(Ce6ModImpl&&) noexcept;
+    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept;
 
 private:
     void hook();
@@ -22,6 +22,7 @@ private:
     static void ce_engine_InitializeGameScript_detour(void* p1, void* p2);
 
     static Ce6ModImpl* sm_self;
+    bool m_moved{};
     config::Config m_config;
     ce6::Libraries m_libs;
     ce6::engine::Functions<std::type_identity_t> m_engine_original;

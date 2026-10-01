@@ -22,8 +22,32 @@ Ce6ModImpl::Ce6ModImpl(config::Config config) : m_config{std::move(config)} {
 }
 
 Ce6ModImpl::~Ce6ModImpl() {
-    set_dev_menu_enabled(false);
-    unhook();
+    if (!m_moved) {
+        set_dev_menu_enabled(false);
+        unhook();
+    }
+}
+
+Ce6ModImpl::Ce6ModImpl(Ce6ModImpl&& other) noexcept
+        : m_config{std::move(other.m_config)}, m_libs{std::move(other.m_libs)},
+          m_engine_original{std::move(other.m_engine_original)}, m_fs_original{std::move(other.m_fs_original)},
+          m_dev_menu_enabled{std::exchange(other.m_dev_menu_enabled, nullptr)} {
+    other.m_moved = true;
+    sm_self = this;
+}
+
+Ce6ModImpl& Ce6ModImpl::operator=(Ce6ModImpl&& other) noexcept {
+    if (this != &other) {
+        m_config = std::move(other.m_config);
+        m_libs = std::move(other.m_libs);
+        m_engine_original = std::move(other.m_engine_original);
+        m_fs_original = std::move(other.m_fs_original);
+        m_dev_menu_enabled = std::exchange(other.m_dev_menu_enabled, nullptr);
+        m_moved = false;
+        other.m_moved = true;
+        sm_self = this;
+    }
+    return *this;
 }
 
 void Ce6ModImpl::hook() {

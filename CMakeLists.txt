@@ -13,11 +13,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS TRUE)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-if(NOT MSVC)
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else()
     add_compile_options(-static)
     add_link_options(-static)
 endif()
 
+include(cmake/options.cmake)
 include(cmake/scm.cmake)
 
 add_subdirectory(thirdparty)
