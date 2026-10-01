@@ -3,6 +3,7 @@
 #include "host.hpp"
 #include "log.hpp"
 #include "misc.hpp"
+#include "mod_impl/ce5_impl.hpp"
 #include "mod_impl/ce6_impl.hpp"
 #include "platform.hpp"
 #include "unicode.hpp"
@@ -10,9 +11,10 @@
 
 #include <cstdlib>
 #include <format>
-#include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 
 void log_version() { LOG("Core version: {}", project_get_version()); }
 
@@ -28,7 +30,7 @@ namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
-std::unique_ptr<Ce6ModImpl> g_mod;
+std::optional<std::variant<Ce5ModImpl, Ce6ModImpl>> g_mod;
 } // namespace
 
 config::Config load_config() {
@@ -82,10 +84,9 @@ void create_mod() {
     log_host_info(g_host_info);
 
     if (g_host_info.id == "DeadIslandDE" || g_host_info.id == "DeadIslandRiptideDE" || g_host_info.id == "DyingLight") {
-        g_mod = std::make_unique<Ce6ModImpl>(g_config);
+        g_mod = Ce6ModImpl{g_config};
     } else if (g_host_info.id == "DeadIsland" || g_host_info.id == "DeadIsland Riptide") {
-        // g_mod = std::make_unique<Ce5Mod>(g_config);
-        throw Error{std::format("Unimplemented host ID: {}", g_host_info.id)};
+        g_mod = Ce5ModImpl{g_config};
     } else {
         throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
     }

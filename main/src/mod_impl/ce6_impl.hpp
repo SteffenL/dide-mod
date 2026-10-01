@@ -7,6 +7,10 @@ class Ce6ModImpl {
 public:
     Ce6ModImpl(config::Config config);
     ~Ce6ModImpl();
+    Ce6ModImpl(const Ce6ModImpl&) noexcept = delete;
+    Ce6ModImpl& operator=(const Ce6ModImpl&) noexcept = delete;
+    Ce6ModImpl(Ce6ModImpl&&) noexcept = default;
+    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept = default;
 
 private:
     void hook();

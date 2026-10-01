@@ -14,6 +14,7 @@ target_sources(dm PRIVATE
     src/log.cpp
     src/main.cpp
     src/minhook.cpp
+    src/mod_impl/ce5_impl.cpp
     src/mod_impl/ce6_impl.cpp
     src/mod.cpp
     src/platform.cpp
