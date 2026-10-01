@@ -1,9 +1,9 @@
 #pragma once
 
-#include "dynlib.hpp"
-#include "misc.hpp"
+#include "../dynlib.hpp"
+#include "../misc.hpp"
 
-namespace cengine {
+namespace ce6 {
 namespace fs {
 struct FFSAddSourceFlags {
     // Some names discovered in debug info of Dead Island, others unconfirmed
@@ -43,7 +43,7 @@ struct Functions {
 };
 } // namespace engine
 
-struct CEngineLibraries {
+struct Libraries {
     struct {
         DynLib lib{DynLib::from_loaded("gamedll_x64_rwdi.dll")};
     } game;
@@ -56,4 +56,4 @@ struct CEngineLibraries {
         fs::Functions<NotNull> fn{lib};
     } filesystem;
 };
-} // namespace cengine
+} // namespace ce6

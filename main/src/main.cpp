@@ -1,4 +1,4 @@
-#include "exports.hpp"
+#include "dsound/exports.hpp"
 #include "log.hpp"
 #include "mod.hpp"
 

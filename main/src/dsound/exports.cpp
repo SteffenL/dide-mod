@@ -1,7 +1,7 @@
 #include "exports.hpp"
+#include "../dynlib.hpp"
+#include "../misc.hpp"
 #include "dsound.hpp"
-#include "dynlib.hpp"
-#include "misc.hpp"
 
 #include <optional>
 

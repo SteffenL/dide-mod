@@ -1,5 +1,4 @@
 #include "config.hpp"
-#include "misc.hpp"
 
 #include <array>
 #include <cwchar>
