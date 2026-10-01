@@ -19,11 +19,14 @@ target_sources(dm PRIVATE
     src/mod.cpp
     src/platform.cpp
     src/unicode.cpp
+    src/xinput/exports.cpp
+    src/xinput/exports.def
+    src/xinput/xinput.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.cpp"
 )
 target_link_libraries(dm PRIVATE dbghelp shlwapi version minhook)
 set_target_properties(dm PROPERTIES
-    OUTPUT_NAME dsound
+    OUTPUT_NAME dide_mod
     PREFIX ""
     CXX_VISIBILITY_PRESET hidden
 )
