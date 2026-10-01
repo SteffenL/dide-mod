@@ -1,6 +1,8 @@
 #include "minhook.hpp"
 #include "misc.hpp"
 
+#include <format>
+
 #include <MinHook.h>
 
 namespace minhook {
@@ -10,25 +12,25 @@ void create_hook_internal(const std::string& name, void* target, void* detour, v
     const auto err{MH_CreateHook(reinterpret_cast<LPVOID>(target), reinterpret_cast<LPVOID>(detour),
                                  reinterpret_cast<LPVOID*>(&original))};
     if (err != MH_OK) {
-        throw Error::format("Failed to create hook for {}", name);
+        throw Error{std::format("Failed to create hook for {}", name)};
     }
 }
 
 void remove_hook_internal(const std::string& name, void* target) {
     if (const auto err{MH_RemoveHook(reinterpret_cast<LPVOID>(target))}; err != MH_OK) {
-        throw Error::format("Failed to remove hook for {}", name);
+        throw Error{std::format("Failed to remove hook for {}", name)};
     }
 }
 
 void queue_enable_hook_internal(const std::string& name, void* target) {
     if (const auto err{MH_QueueEnableHook(reinterpret_cast<LPVOID>(target))}; err != MH_OK) {
-        throw Error::format("Failed to queue hook enablement for {}", name);
+        throw Error{std::format("Failed to queue hook enablement for {}", name)};
     }
 }
 
 void queue_disable_hook_internal(const std::string& name, void* target) {
     if (const auto err{MH_QueueDisableHook(reinterpret_cast<LPVOID>(target))}; err != MH_OK) {
-        throw Error::format("Failed to queue hook disablement for {}", name);
+        throw Error{std::format("Failed to queue hook disablement for {}", name)};
     }
 }
 } // namespace detail

@@ -2,6 +2,7 @@
 #include "misc.hpp"
 
 #include <filesystem>
+#include <format>
 #include <utility>
 
 #include <windows.h>
@@ -10,7 +11,7 @@ namespace {
 void* load_library(const std::filesystem::path& name) {
     const auto handle{::LoadLibraryW(name.c_str())};
     if (!handle) {
-        throw Error::format("Unable to load library: {}", reinterpret_cast<const char*>(name.u8string().c_str()));
+        throw Error{std::format("Unable to load library: {}", reinterpret_cast<const char*>(name.u8string().c_str()))};
     }
     return reinterpret_cast<void*>(handle);
 }
@@ -18,8 +19,8 @@ void* load_library(const std::filesystem::path& name) {
 void* find_loaded_library(const std::filesystem::path& name) {
     HMODULE handle{};
     if (!::GetModuleHandleExW(0, name.c_str(), &handle)) {
-        throw Error::format("Unable to find loaded library: {}",
-                            reinterpret_cast<const char*>(name.u8string().c_str()));
+        throw Error{std::format("Unable to find loaded library: {}",
+                                reinterpret_cast<const char*>(name.u8string().c_str()))};
     }
     return reinterpret_cast<void*>(handle);
 }

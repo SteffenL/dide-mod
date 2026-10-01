@@ -11,6 +11,7 @@
 #include "version.hpp"
 
 #include <cstdlib>
+#include <format>
 #include <optional>
 #include <span>
 #include <string>
@@ -42,8 +43,8 @@ config::Config load_config() {
     try {
         return config::load_file(config_file_path);
     } catch (const std::exception& ex) {
-        throw Error::format("Unable to load config file at {}: {}", narrow_string(config_file_path.wstring()),
-                            ex.what());
+        throw Error{std::format("Unable to load config file at {}: {}", narrow_string(config_file_path.wstring()),
+                                ex.what())};
     }
 }
 

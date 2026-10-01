@@ -3,6 +3,7 @@
 #include "misc.hpp"
 
 #include <filesystem>
+#include <format>
 
 #ifdef __GNUC__
     #pragma GCC diagnostic push
@@ -26,7 +27,7 @@ public:
         if (auto fn{reinterpret_cast<fn_t>(sym_impl(name))}) {
             return fn;
         } else {
-            throw Error::format("Function not found: {}", name);
+            throw Error{std::format("Function not found: {}", name)};
         }
     }
 

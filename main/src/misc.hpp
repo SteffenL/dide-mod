@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <format>
 #include <functional>
 #include <source_location>
 #include <stdexcept>
@@ -49,11 +48,6 @@ class Error : public std::runtime_error {
 public:
     Error(std::string message, SourceLocation loc = SourceLocation::current())
             : runtime_error{std::move(message)}, m_loc{std::move(loc)} {}
-
-    template<typename... Args>
-    static Error format(std::format_string<Args...> format_str, Args&&... args) {
-        return Error{std::format(std::move(format_str), std::forward<Args>(args)...)};
-    }
 
     const SourceLocation& where() const noexcept { return m_loc; }
 
