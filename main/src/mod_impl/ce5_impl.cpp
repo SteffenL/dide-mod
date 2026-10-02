@@ -181,24 +181,25 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
 
     struct Pattern {
         std::string_view pattern;
-        size_t addr_offset;
-        size_t ip_offset_after;
+        size_t offset;
     };
 
     static const std::unordered_map<std::string_view, Pattern> search_infos = {
-        /* 0:   74 13                  je     0x15
-           2:   5f                     pop    %edi
-           3:   5e                     pop    %esi
-           4:   5d                     pop    %ebp
-           5:   c6 05 d7 09 ed 02 01   movb   $0x1,0x2ed09d7
-           c:   b0 01                  mov    $0x1,%al */
-        {"DeadIsland", Pattern{"74135F5E5DC605D7", 0x5 + 2, 0xc}},
+        /*
+        0:   74 13                  je     0x15
+        2:   5f                     pop    %edi
+        3:   5e                     pop    %esi
+        4:   5d                     pop    %ebp
+        5:   c6 05 d7 09 b4 10 01   movb   $0x1,0x10b409d7
+        c:   b0 01                  mov    $0x1,%al
+        */
+        {"DeadIsland", Pattern{"74135F5E5DC605D7", 0x5 + 2}},
         /* 0:   74 12                  je     0x14
            2:   5f                     pop    %edi
            3:   5e                     pop    %esi
            4:   c6 05 47 21 c7 10 01   movb   $0x1,0x10c72147
            b:   b0 01                  mov    $0x1,%al */
-        {"DeadIsland Riptide", Pattern{"74125F5EC60547", 0x4 + 2, 0xb}},
+        {"DeadIsland Riptide", Pattern{"74125F5EC60547", 0x4 + 2}},
     };
     const auto& search_info{search_infos.at(m_host_info.id)};
 
@@ -208,14 +209,11 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
         return nullptr;
     }
 
-    const uintptr_t rip{code_start + *match_offset + search_info.ip_offset_after};
-    const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset +
-                                                                        search_info.addr_offset)};
-    const uintptr_t enable_menu_abs_address{rip + enable_menu_rel_address};
-    auto* enable_menu{reinterpret_cast<bool*>(enable_menu_abs_address)};
+    const uint32_t enable_menu_address{*reinterpret_cast<const uint32_t*>(code_start + *match_offset + search_info.offset)};
+    auto* enable_menu{reinterpret_cast<bool*>(enable_menu_address)};
 
     LOG("Developer menu pattern: {:#x}", match_offset.value());
-    LOG("Developer menu variable: {:#x}", enable_menu_abs_address);
+    LOG("Developer menu variable: {:#x}", enable_menu_address);
 
     return enable_menu;
 }
