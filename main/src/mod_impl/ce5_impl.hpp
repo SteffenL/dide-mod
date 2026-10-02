@@ -48,7 +48,7 @@ private:
     ce5::Libraries m_libs;
     ce5::engine::Functions<std::type_identity_t> m_engine_original;
     ce5::fs::Functions<std::type_identity_t> m_fs_original;
-    bool* m_dev_menu_enabled{};
+    bool* m_dev_menu_ptr{};
     bool m_hooked{};
     bool m_libs_loaded{};
     bool m_setup_done{};

@@ -77,9 +77,8 @@ void Ce5ModImpl::on_all_libs_loaded() {
     m_libs_loaded = true;
     log_libs();
     hook();
-    if (auto found{sm_self->find_dev_menu_enable()}) {
-        sm_self->m_dev_menu_enabled = found;
-        sm_self->set_dev_menu_enabled(sm_self->m_config.features.developer_menu);
+    if (m_config.features.developer_menu) {
+        sm_self->set_dev_menu_enabled(true);
     }
 }
 
@@ -128,35 +127,18 @@ void Ce5ModImpl::load_paks(const config::Config& cfg) {
 }
 
 void Ce5ModImpl::set_dev_menu_enabled(bool enable) {
-    if (!m_dev_menu_enabled) {
-        return;
+    if (!m_dev_menu_ptr) {
+        auto found{sm_self->find_dev_menu_enable()};
+        if (!found) {
+            return;
+        }
+        m_dev_menu_ptr = found;
     }
-    if (*m_dev_menu_enabled == enable) {
+    if (*m_dev_menu_ptr == enable) {
         return;
     }
     LOG("Setting dev menu enabled to {}.", enable);
-    *m_dev_menu_enabled = enable;
-}
-
-template<typename T>
-    requires requires(T t) {
-        typename T::element_type;
-        typename T::size_type;
-        { *t.begin() };
-        { t.size() };
-        requires std::integral<typename T::element_type>;
-        sizeof(typename T::element_type) == 1;
-        requires !std::same_as<typename T::element_type, bool>;
-    }
-std::string to_hex(const T& data) {
-    static constexpr std::string_view alphabet{"0123456789abcdef"};
-    std::string result;
-    result.reserve(data.size() * 2);
-    for (auto b : data) {
-        result += alphabet[static_cast<uint8_t>(b) >> 4];
-        result += alphabet[static_cast<uint8_t>(b) & 15];
-    }
-    return result;
+    *m_dev_menu_ptr = enable;
 }
 
 bool* Ce5ModImpl::find_dev_menu_enable() {
@@ -198,7 +180,8 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
         return nullptr;
     }
 
-    const uint32_t enable_menu_address{*reinterpret_cast<const uint32_t*>(code_start + *match_offset + search_info.offset)};
+    const uint32_t enable_menu_address{*reinterpret_cast<const uint32_t*>(code_start + *match_offset +
+                                                                          search_info.offset)};
     auto* enable_menu{reinterpret_cast<bool*>(enable_menu_address)};
 
     LOG("Developer menu pattern: {:#x}", match_offset.value());
