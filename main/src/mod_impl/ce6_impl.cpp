@@ -12,7 +12,8 @@
 #include <type_traits>
 #include <utility>
 
-Ce6ModImpl::Ce6ModImpl(config::Config config) : m_config{std::move(config)} {
+Ce6ModImpl::Ce6ModImpl(HostAppInfo host_info, config::Config config)
+        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {
     sm_self = this;
     log_libs();
     hook();
@@ -86,14 +87,19 @@ bool* Ce6ModImpl::find_dev_menu_enable() {
 
     LOG("Searching for developer menu offset from {:#x} to {:#x}...", code_start, code_end);
 
+    // Code for DI - DIR and DL have minor variations
+    /* 0:   74 0c                  je     0xe
+       2:   c6 05 74 ea 86 00 01   movb   $0x1,0x86ea74(%rip)
+       9:   e9 bc 05 00 00         jmp    0x5ca
+       e:   8b de                  mov    %esi,%ebx */
     const auto match_offset{find_pattern("740CC605??????0001E9BC0500008BDE", code_range)};
     if (!match_offset) {
         LOG("Could not find developer menu offset");
         return nullptr;
     }
 
-    const uintptr_t rip{code_start + *match_offset + 2 + 7};
-    const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset + 4)};
+    const uintptr_t rip{code_start + *match_offset + 0x9};
+    const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset + 0x2 + 2)};
     const uintptr_t enable_menu_abs_address{rip + enable_menu_rel_address};
     auto* enable_menu{reinterpret_cast<bool*>(enable_menu_abs_address)};
 

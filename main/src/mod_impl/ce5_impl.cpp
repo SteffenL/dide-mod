@@ -10,9 +10,11 @@
 
 #include <cstdint>
 #include <span>
+#include <unordered_map>
 #include <utility>
 
-Ce5ModImpl::Ce5ModImpl(config::Config config) : m_config{std::move(config)} {
+Ce5ModImpl::Ce5ModImpl(HostAppInfo host_info, config::Config config)
+        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {
     sm_self = this;
     check_libs();
 }
@@ -147,13 +149,23 @@ void Ce5ModImpl::set_dev_menu_enabled(bool enable) {
     *m_dev_menu_enabled = enable;
 }
 
-std::string to_hex(const std::span<const char> data) {
+template<typename T>
+    requires requires(T t) {
+        typename T::element_type;
+        typename T::size_type;
+        { *t.begin() };
+        { t.size() };
+        requires std::integral<typename T::element_type>;
+        sizeof(typename T::element_type) == 1;
+        requires !std::same_as<typename T::element_type, bool>;
+    }
+std::string to_hex(const T& data) {
     static constexpr std::string_view alphabet{"0123456789abcdef"};
     std::string result;
     result.reserve(data.size() * 2);
-    for (char c : data) {
-        result += alphabet[(c >> 4) & 7];
-        result += alphabet[c & 7];
+    for (auto b : data) {
+        result += alphabet[static_cast<uint8_t>(b) >> 4];
+        result += alphabet[static_cast<uint8_t>(b) & 15];
     }
     return result;
 }
@@ -162,25 +174,47 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
     const auto code_start{get_base_of_code(m_libs.game.lib->address())};
     const auto code_end{code_start + get_size_of_code(m_libs.game.lib->address())};
     const std::span code_range{
-        reinterpret_cast<const char*>(code_start), reinterpret_cast<const char*>(code_end)
+        reinterpret_cast<const uint8_t*>(code_start), reinterpret_cast<const uint8_t*>(code_end)
     };
-    //0xa2e0c
-
-    LOG("Data: {}", to_hex(std::span{code_range.begin(), code_range.begin() + 18}));
 
     LOG("Searching for developer menu offset from {:#x} to {:#x}...", code_start, code_end);
 
-    //565546051406650201300153034420420000
-    const auto match_offset{find_pattern("5E5?C605??????1001B0015B8?????C20800", code_range)};
+    struct Pattern {
+        std::string_view pattern;
+        size_t addr_offset;
+        size_t ip_offset_after;
+    };
+
+    static const std::unordered_map<std::string_view, Pattern> search_infos = {
+        /* 0:   74 13                  je     0x15
+           2:   5f                     pop    %edi
+           3:   5e                     pop    %esi
+           4:   5d                     pop    %ebp
+           5:   c6 05 d7 09 ed 02 01   movb   $0x1,0x2ed09d7
+           c:   b0 01                  mov    $0x1,%al */
+        {"DeadIsland", Pattern{"74135F5E5DC605D7", 0x5 + 2, 0xc}},
+        /* 0:   74 12                  je     0x14
+           2:   5f                     pop    %edi
+           3:   5e                     pop    %esi
+           4:   c6 05 47 21 c7 10 01   movb   $0x1,0x10c72147
+           b:   b0 01                  mov    $0x1,%al */
+        {"DeadIsland Riptide", Pattern{"74125F5EC60547", 0x4 + 2, 0xb}},
+    };
+    const auto& search_info{search_infos.at(m_host_info.id)};
+
+    const auto match_offset{find_pattern(search_info.pattern, code_range)};
     if (!match_offset) {
         LOG("Could not find developer menu offset");
         return nullptr;
     }
 
-    const uintptr_t rip{code_start + *match_offset + 2 + 7};
-    const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset + 4)};
+    const uintptr_t rip{code_start + *match_offset + search_info.ip_offset_after};
+    const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset +
+                                                                        search_info.addr_offset)};
     const uintptr_t enable_menu_abs_address{rip + enable_menu_rel_address};
     auto* enable_menu{reinterpret_cast<bool*>(enable_menu_abs_address)};
+
+    LOG("Developer menu: {:#x}", enable_menu_abs_address);
 
     return enable_menu;
 }
@@ -200,7 +234,6 @@ bool Ce5ModImpl::ce_fs_add_source_detour(const char* path, ce5::fs::FFSAddSource
         LOG_PARTIAL(" (returned {})\n", result);
         return result;
     });
-    return false;
 }
 
 void Ce5ModImpl::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
@@ -212,7 +245,7 @@ void Ce5ModImpl::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
     #pragma GCC diagnostic ignored "-Wattributes"
 #endif
 
-__fastcall void Ce5ModImpl::ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* /*dummy*/, const char* p1,
+void __fastcall Ce5ModImpl::ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* /*dummy*/, const char* p1,
                                                             const char* p2) {
     sm_self->m_engine_original.IGame_MountDlc(self, p1, p2);
     sm_self->finish_setup();

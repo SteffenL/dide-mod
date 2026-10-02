@@ -1,12 +1,13 @@
 #include "../cengine/ce5.hpp"
 #include "../config.hpp"
 #include "../dll_notify.hpp"
+#include "../host.hpp"
 
 #include <type_traits>
 
 class Ce5ModImpl {
 public:
-    Ce5ModImpl(config::Config config);
+    Ce5ModImpl(HostAppInfo host_info, config::Config config);
     ~Ce5ModImpl();
     Ce5ModImpl(const Ce5ModImpl&) noexcept = delete;
     Ce5ModImpl& operator=(const Ce5ModImpl&) noexcept = delete;
@@ -34,7 +35,7 @@ private:
     #pragma GCC diagnostic ignored "-Wattributes"
 #endif
 
-    static __fastcall void ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* dummy, const char* p1,
+    static void __fastcall ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* dummy, const char* p1,
                                                            const char* p2);
 
 #ifdef __GNUC__
@@ -43,6 +44,7 @@ private:
 
     static Ce5ModImpl* sm_self;
     bool m_moved{};
+    HostAppInfo m_host_info;
     config::Config m_config;
     DllNotifyReg m_ntdll_notify;
     ce5::Libraries m_libs;
