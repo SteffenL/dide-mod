@@ -214,7 +214,8 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
     const uintptr_t enable_menu_abs_address{rip + enable_menu_rel_address};
     auto* enable_menu{reinterpret_cast<bool*>(enable_menu_abs_address)};
 
-    LOG("Developer menu: {:#x}", enable_menu_abs_address);
+    LOG("Developer menu pattern: {:#x}", match_offset.value());
+    LOG("Developer menu variable: {:#x}", enable_menu_abs_address);
 
     return enable_menu;
 }
