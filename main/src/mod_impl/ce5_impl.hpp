@@ -6,6 +6,15 @@
 #include <mutex>
 #include <type_traits>
 
+namespace ce5::mod {
+
+constexpr std::string_view di_id{"DeadIsland"};
+constexpr std::string_view dir_id{"DeadIsland Riptide"};
+constexpr std::string_view engine_dll_name{"engine_x86_rwdi.dll"};
+constexpr std::string_view filesystem_dll_name{"filesystem_x86_rwdi.dll"};
+constexpr std::string_view di_game_dll_name{"game_x86_rwdi.dll"};
+constexpr std::string_view dir_game_dll_name{"gamedll_x86_rwdi.dll"};
+
 class Ce5ModImpl {
 public:
     Ce5ModImpl(HostAppInfo host_info, config::Config config);
@@ -53,5 +62,6 @@ private:
     std::once_flag m_find_dev_menu_once_flag;
     bool m_hooked{};
     bool m_libs_loaded{};
-    bool m_setup_done{};
 };
+
+} // namespace ce5::mod

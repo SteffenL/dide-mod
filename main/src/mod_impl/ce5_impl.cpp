@@ -10,8 +10,16 @@
 
 #include <cstdint>
 #include <span>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
+
+namespace ce5::mod {
+namespace {
+std::string_view get_game_dll_name(std::string_view game_id) {
+    return game_id == di_id ? di_game_dll_name : dir_game_dll_name;
+}
+} // namespace
 
 Ce5ModImpl::Ce5ModImpl(HostAppInfo host_info, config::Config config)
         : m_host_info{std::move(host_info)}, m_config{std::move(config)} {
@@ -25,30 +33,31 @@ Ce5ModImpl::~Ce5ModImpl() {
 }
 
 void Ce5ModImpl::check_libs() {
-    m_ntdll_notify.subscribe([this](std::filesystem::path name) {
+    m_ntdll_notify.subscribe([this](std::filesystem::path dll_path) {
+        const std::filesystem::path name{dll_path.filename()};
         const auto name_str{narrow_string(name.wstring())};
         LOG("DLL: {}", name_str);
-        if (name_str.ends_with("\\engine_x86_rwdi.dll")) {
+        if (name_str.ends_with(engine_dll_name)) {
             on_engine_lib_loaded();
-        } else if (name_str.ends_with("\\filesystem_x86_rwdi.dll")) {
+        } else if (name_str.ends_with(filesystem_dll_name)) {
             on_filesystem_lib_loaded();
-        } else if (name_str.ends_with("\\game_x86_rwdi.dll")) {
+        } else if (name_str.ends_with(get_game_dll_name(m_host_info.id))) {
             on_game_lib_loaded();
         }
     });
-    if (DynLib::is_loaded("engine_x86_rwdi.dll")) {
+    if (DynLib::is_loaded(engine_dll_name)) {
         on_engine_lib_loaded();
     }
-    if (DynLib::is_loaded("filesystem_x86_rwdi.dll")) {
+    if (DynLib::is_loaded(filesystem_dll_name)) {
         on_filesystem_lib_loaded();
     }
-    if (DynLib::is_loaded("game_x86_rwdi.dll")) {
+    if (DynLib::is_loaded(get_game_dll_name(m_host_info.id))) {
         on_game_lib_loaded();
     }
 }
 
 void Ce5ModImpl::on_engine_lib_loaded() {
-    m_libs.engine.lib.emplace("engine_x86_rwdi.dll");
+    m_libs.engine.lib.emplace(engine_dll_name);
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
@@ -56,7 +65,7 @@ void Ce5ModImpl::on_engine_lib_loaded() {
 }
 
 void Ce5ModImpl::on_filesystem_lib_loaded() {
-    m_libs.filesystem.lib.emplace("filesystem_x86_rwdi.dll");
+    m_libs.filesystem.lib.emplace(filesystem_dll_name);
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
@@ -64,7 +73,7 @@ void Ce5ModImpl::on_filesystem_lib_loaded() {
 }
 
 void Ce5ModImpl::on_game_lib_loaded() {
-    m_libs.game.lib.emplace("game_x86_rwdi.dll");
+    m_libs.game.lib.emplace(get_game_dll_name(m_host_info.id));
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
     }
@@ -228,3 +237,5 @@ void __fastcall Ce5ModImpl::ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* 
 #endif
 
 Ce5ModImpl* Ce5ModImpl::sm_self{};
+
+} // namespace ce5::mod

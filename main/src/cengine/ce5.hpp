@@ -65,15 +65,15 @@ struct Libraries {
     bool all_ok() const { return game.lib.has_value() && engine.lib.has_value() && filesystem.lib.has_value(); }
 
     struct {
-        std::optional<DynLib> lib; //{DynLib::from_loaded("game_x86_rwdi.dll")};
+        std::optional<DynLib> lib;
     } game;
     struct {
-        std::optional<DynLib> lib; //{DynLib::from_loaded("engine_x86_rwdi.dll")};
-        std::optional<engine::Functions<NotNull>> fn; //{lib};
+        std::optional<DynLib> lib;
+        std::optional<engine::Functions<NotNull>> fn;
     } engine;
     struct {
-        std::optional<DynLib> lib; //{DynLib::from_loaded("filesystem_x86_rwdi.dll")};
-        std::optional<fs::Functions<NotNull>> fn; //{lib};
+        std::optional<DynLib> lib;
+        std::optional<fs::Functions<NotNull>> fn;
     } filesystem;
 };
 } // namespace ce5

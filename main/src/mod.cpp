@@ -30,7 +30,7 @@ namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
-std::optional<std::variant<Ce5ModImpl, Ce6ModImpl>> g_mod;
+std::optional<std::variant<ce5::mod::Ce5ModImpl, ce6::mod::Ce6ModImpl>> g_mod;
 } // namespace
 
 config::Config load_config() {
@@ -83,10 +83,11 @@ void create_mod() {
     g_host_info = load_host_app_info();
     log_host_info(g_host_info);
 
-    if (g_host_info.id == "DeadIslandDE" || g_host_info.id == "DeadIslandRiptideDE" || g_host_info.id == "DyingLight") {
-        g_mod.emplace(std::in_place_type<Ce6ModImpl>, g_host_info, g_config);
-    } else if (g_host_info.id == "DeadIsland" || g_host_info.id == "DeadIsland Riptide") {
-        g_mod.emplace(std::in_place_type<Ce5ModImpl>, g_host_info, g_config);
+    if (g_host_info.id == ce6::mod::dide_id || g_host_info.id == ce6::mod::dirde_id ||
+        g_host_info.id == ce6::mod::dl_id) {
+        g_mod.emplace(std::in_place_type<ce6::mod::Ce6ModImpl>, g_host_info, g_config);
+    } else if (g_host_info.id == ce5::mod::di_id || g_host_info.id == ce5::mod::dir_id) {
+        g_mod.emplace(std::in_place_type<ce5::mod::Ce5ModImpl>, g_host_info, g_config);
     } else {
         throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
     }

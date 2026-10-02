@@ -96,9 +96,9 @@ DllNotifyReg& DllNotifyReg::operator=(DllNotifyReg&& other) noexcept {
     return *this;
 }
 
-void DllNotifyReg::notify(std::filesystem::path full_dll_name) {
+void DllNotifyReg::notify(std::filesystem::path dll_path) {
     for (auto& cb : m_callbacks) {
-        cb(std::move(full_dll_name));
+        cb(std::move(dll_path));
     }
 }
 

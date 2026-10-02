@@ -44,16 +44,18 @@ struct Functions {
 } // namespace engine
 
 struct Libraries {
+    bool all_ok() const { return game.lib.has_value() && engine.lib.has_value() && filesystem.lib.has_value(); }
+
     struct {
-        DynLib lib{DynLib::from_loaded("gamedll_x64_rwdi.dll")};
+        std::optional<DynLib> lib;
     } game;
     struct {
-        DynLib lib{DynLib::from_loaded("engine_x64_rwdi.dll")};
-        engine::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib;
+        std::optional<engine::Functions<NotNull>> fn;
     } engine;
     struct {
-        DynLib lib{DynLib::from_loaded("filesystem_x64_rwdi.dll")};
-        fs::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib;
+        std::optional<fs::Functions<NotNull>> fn;
     } filesystem;
 };
 } // namespace ce6
