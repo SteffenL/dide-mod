@@ -20,7 +20,6 @@ private:
     void on_filesystem_lib_loaded();
     void on_game_lib_loaded();
     void on_all_libs_loaded();
-    void finish_setup();
     void hook();
     void unhook();
     void load_paks(const config::Config& cfg);
@@ -43,7 +42,6 @@ private:
 #endif
 
     static Ce5ModImpl* sm_self;
-    bool m_moved{};
     HostAppInfo m_host_info;
     config::Config m_config;
     DllNotifyReg m_ntdll_notify;

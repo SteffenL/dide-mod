@@ -20,11 +20,8 @@ Ce5ModImpl::Ce5ModImpl(HostAppInfo host_info, config::Config config)
 }
 
 Ce5ModImpl::~Ce5ModImpl() {
-    LOG("~Ce5ModImpl");
-    if (!m_moved) {
-        set_dev_menu_enabled(false);
-        unhook();
-    }
+    set_dev_menu_enabled(false);
+    unhook();
 }
 
 void Ce5ModImpl::check_libs() {
@@ -80,18 +77,10 @@ void Ce5ModImpl::on_all_libs_loaded() {
     m_libs_loaded = true;
     log_libs();
     hook();
-}
-
-void Ce5ModImpl::finish_setup() {
-    if (m_setup_done) {
-        return;
-    }
-    m_setup_done = true;
     if (auto found{sm_self->find_dev_menu_enable()}) {
         sm_self->m_dev_menu_enabled = found;
         sm_self->set_dev_menu_enabled(sm_self->m_config.features.developer_menu);
     }
-    sm_self->load_paks(sm_self->m_config);
 }
 
 void Ce5ModImpl::hook() {
@@ -247,7 +236,7 @@ void Ce5ModImpl::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
 void __fastcall Ce5ModImpl::ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* /*dummy*/, const char* p1,
                                                             const char* p2) {
     sm_self->m_engine_original.IGame_MountDlc(self, p1, p2);
-    sm_self->finish_setup();
+    sm_self->load_paks(sm_self->m_config);
 }
 
 #ifdef __GNUC__
