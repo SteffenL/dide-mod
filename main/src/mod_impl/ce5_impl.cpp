@@ -127,12 +127,13 @@ void Ce5ModImpl::load_paks(const config::Config& cfg) {
 }
 
 void Ce5ModImpl::set_dev_menu_enabled(bool enable) {
-    if (!m_dev_menu_ptr) {
-        auto found{sm_self->find_dev_menu_enable()};
-        if (!found) {
-            return;
+    std::call_once(m_find_dev_menu_once_flag, [&] {
+        if (auto found{sm_self->find_dev_menu_enable()}) {
+            m_dev_menu_ptr = found;
         }
-        m_dev_menu_ptr = found;
+    });
+    if (!m_dev_menu_ptr) {
+        return;
     }
     if (*m_dev_menu_ptr == enable) {
         return;

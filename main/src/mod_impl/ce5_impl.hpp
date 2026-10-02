@@ -3,6 +3,7 @@
 #include "../dll_notify.hpp"
 #include "../host.hpp"
 
+#include <mutex>
 #include <type_traits>
 
 class Ce5ModImpl {
@@ -49,6 +50,7 @@ private:
     ce5::engine::Functions<std::type_identity_t> m_engine_original;
     ce5::fs::Functions<std::type_identity_t> m_fs_original;
     bool* m_dev_menu_ptr{};
+    std::once_flag m_find_dev_menu_once_flag;
     bool m_hooked{};
     bool m_libs_loaded{};
     bool m_setup_done{};
