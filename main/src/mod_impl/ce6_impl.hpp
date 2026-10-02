@@ -9,15 +9,17 @@ public:
     ~Ce6ModImpl();
     Ce6ModImpl(const Ce6ModImpl&) noexcept = delete;
     Ce6ModImpl& operator=(const Ce6ModImpl&) noexcept = delete;
-    Ce6ModImpl(Ce6ModImpl&&) noexcept;
-    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept;
+    Ce6ModImpl(Ce6ModImpl&&) noexcept = delete;
+    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept = delete;
 
 private:
+    void finish_entry();
     void hook();
     void unhook();
     void load_paks(const config::Config& cfg);
     void set_dev_menu_enabled(bool enable);
     bool* find_dev_menu_enable();
+    void log_libs() const;
     static bool ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags);
     static void ce_engine_InitializeGameScript_detour(void* p1, void* p2);
 

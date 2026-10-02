@@ -2,7 +2,6 @@
 
 #include "../dynlib.hpp"
 #include "../misc.hpp"
-#include "../platform.hpp"
 
 namespace ce5 {
 namespace fs {
@@ -30,29 +29,51 @@ struct Functions {
 } // namespace fs
 
 namespace engine {
-using InitializeGameScriptDLL_t = void (*)();
+class IGame;
+
+/*class IGame {
+public:
+    void MountDlc(const char* p1, const char* p2);
+};*/
+
+using InitializeGameScript_t = void (*)(void* p1, void* p2);
+
+#ifdef __GNUC__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wattributes"
+#endif
+
+using MountDlc_t = void(__thiscall*)(IGame* self, const char* p1, const char* p2);
+
+#ifdef __GNUC__
+    #pragma GCC diagnostic pop
+#endif
 
 template<template<typename> typename Wrapper>
 struct Functions {
     Functions() = default;
     Functions(const DynLib& lib)
-            : InitializeGameScriptDLL{lib.sym<InitializeGameScriptDLL_t>("InitializeGameScriptDLL")} {}
+            : InitializeGameScript{lib.sym<InitializeGameScript_t>("InitializeGameScript")},
+              IGame_MountDlc{lib.sym<MountDlc_t>("?MountDlc@IGame@@QAEXPBD0@Z")} {}
 
-    Wrapper<InitializeGameScriptDLL_t> InitializeGameScriptDLL;
+    Wrapper<InitializeGameScript_t> InitializeGameScript;
+    Wrapper<MountDlc_t> IGame_MountDlc;
 };
 } // namespace engine
 
 struct Libraries {
+    bool all_ok() const { return game.lib.has_value() && engine.lib.has_value() && filesystem.lib.has_value(); }
+
     struct {
-        DynLib lib{DynLib{"game_x86_rwdi.dll"}};
+        std::optional<DynLib> lib; //{DynLib::from_loaded("game_x86_rwdi.dll")};
     } game;
     struct {
-        DynLib lib{DynLib{"engine_x86_rwdi.dll"}};
-        engine::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib; //{DynLib::from_loaded("engine_x86_rwdi.dll")};
+        std::optional<engine::Functions<NotNull>> fn; //{lib};
     } engine;
     struct {
-        DynLib lib{DynLib{"filesystem_x87_rwdi.dll"}};
-        fs::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib; //{DynLib::from_loaded("filesystem_x86_rwdi.dll")};
+        std::optional<fs::Functions<NotNull>> fn; //{lib};
     } filesystem;
 };
 } // namespace ce5

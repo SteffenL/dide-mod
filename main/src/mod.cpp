@@ -84,9 +84,9 @@ void create_mod() {
     log_host_info(g_host_info);
 
     if (g_host_info.id == "DeadIslandDE" || g_host_info.id == "DeadIslandRiptideDE" || g_host_info.id == "DyingLight") {
-        g_mod = Ce6ModImpl{g_config};
+        g_mod.emplace(std::in_place_type<Ce6ModImpl>, g_config);
     } else if (g_host_info.id == "DeadIsland" || g_host_info.id == "DeadIsland Riptide") {
-        g_mod = Ce5ModImpl{g_config};
+        g_mod.emplace(std::in_place_type<Ce5ModImpl>, g_config);
     } else {
         throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
     }

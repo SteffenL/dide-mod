@@ -6,6 +6,7 @@ generate_scm_version(
 add_library(dm MODULE)
 target_sources(dm PRIVATE
     src/config.cpp
+    src/dll_notify.cpp
     src/dynlib.cpp
     src/host.cpp
     src/log.cpp

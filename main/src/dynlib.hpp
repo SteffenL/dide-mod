@@ -20,6 +20,7 @@ public:
     DynLib& operator=(DynLib&&) noexcept;
     DynLib(DynLib&&) noexcept;
     static DynLib from_loaded(std::filesystem::path name);
+    static bool is_loaded(const std::filesystem::path& name) noexcept;
 
     template<typename T>
     auto sym(const char* name) const {

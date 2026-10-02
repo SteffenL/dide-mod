@@ -14,11 +14,8 @@
 
 Ce6ModImpl::Ce6ModImpl(config::Config config) : m_config{std::move(config)} {
     sm_self = this;
+    log_libs();
     hook();
-    if (auto found{find_dev_menu_enable()}) {
-        m_dev_menu_enabled = found;
-        set_dev_menu_enabled(m_config.features.developer_menu);
-    }
 }
 
 Ce6ModImpl::~Ce6ModImpl() {
@@ -28,26 +25,12 @@ Ce6ModImpl::~Ce6ModImpl() {
     }
 }
 
-Ce6ModImpl::Ce6ModImpl(Ce6ModImpl&& other) noexcept
-        : m_config{std::move(other.m_config)}, m_libs{std::move(other.m_libs)},
-          m_engine_original{std::move(other.m_engine_original)}, m_fs_original{std::move(other.m_fs_original)},
-          m_dev_menu_enabled{std::exchange(other.m_dev_menu_enabled, nullptr)} {
-    other.m_moved = true;
-    sm_self = this;
-}
-
-Ce6ModImpl& Ce6ModImpl::operator=(Ce6ModImpl&& other) noexcept {
-    if (this != &other) {
-        m_config = std::move(other.m_config);
-        m_libs = std::move(other.m_libs);
-        m_engine_original = std::move(other.m_engine_original);
-        m_fs_original = std::move(other.m_fs_original);
-        m_dev_menu_enabled = std::exchange(other.m_dev_menu_enabled, nullptr);
-        m_moved = false;
-        other.m_moved = true;
-        sm_self = this;
+void Ce6ModImpl::finish_entry() {
+    if (auto found{sm_self->find_dev_menu_enable()}) {
+        sm_self->m_dev_menu_enabled = found;
+        sm_self->set_dev_menu_enabled(sm_self->m_config.features.developer_menu);
     }
-    return *this;
+    sm_self->load_paks(sm_self->m_config);
 }
 
 void Ce6ModImpl::hook() {
@@ -117,6 +100,14 @@ bool* Ce6ModImpl::find_dev_menu_enable() {
     return enable_menu;
 }
 
+void Ce6ModImpl::log_libs() const {
+    LOG_TX([this] {
+        LOG("Game DLL: {:#x}", m_libs.game.lib.address());
+        LOG("Engine DLL: {:#x}", m_libs.engine.lib.address());
+        LOG("Filesystem DLL: {:#x}", m_libs.filesystem.lib.address());
+    });
+}
+
 bool Ce6ModImpl::ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
         LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
@@ -127,8 +118,8 @@ bool Ce6ModImpl::ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSource
 }
 
 void Ce6ModImpl::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
-    sm_self->load_paks(sm_self->m_config);
     sm_self->m_engine_original.InitializeGameScript(p1, p2);
+    sm_self->finish_entry();
 }
 
 Ce6ModImpl* Ce6ModImpl::sm_self{};

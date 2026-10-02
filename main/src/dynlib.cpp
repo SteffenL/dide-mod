@@ -8,8 +8,11 @@
 #include <windows.h>
 
 namespace {
+struct unchecked_t {
+} unchecked;
+
 void* load_library(const std::filesystem::path& name) {
-    const auto handle{::LoadLibraryW(name.c_str())};
+    auto handle{::LoadLibraryW(name.c_str())};
     if (!handle) {
         throw Error{std::format("Unable to load library ({}): {}", ::GetLastError(),
                                 reinterpret_cast<const char*>(name.u8string().c_str()))};
@@ -17,13 +20,20 @@ void* load_library(const std::filesystem::path& name) {
     return reinterpret_cast<void*>(handle);
 }
 
-void* find_loaded_library(const std::filesystem::path& name) {
+void* find_loaded_library(unchecked_t, const std::filesystem::path& name) {
     HMODULE handle{};
     if (!::GetModuleHandleExW(0, name.c_str(), &handle)) {
-        throw Error{std::format("Unable to find loaded library ({}): {}", ::GetLastError(),
-                                reinterpret_cast<const char*>(name.u8string().c_str()))};
+        return nullptr;
     }
     return reinterpret_cast<void*>(handle);
+}
+
+void* find_loaded_library(const std::filesystem::path& name) {
+    if (auto* handle{find_loaded_library(unchecked, name)}) {
+        return handle;
+    }
+    throw Error{std::format("Unable to find loaded library ({}): {}", ::GetLastError(),
+                            reinterpret_cast<const char*>(name.u8string().c_str()))};
 }
 } // namespace
 
@@ -40,6 +50,8 @@ DynLib DynLib::from_loaded(std::filesystem::path name) {
     auto lib{find_loaded_library(name)};
     return DynLib{std::move(name), std::move(lib)};
 }
+
+bool DynLib::is_loaded(const std::filesystem::path& name) noexcept { return !!::GetModuleHandleW(name.c_str()); }
 
 DynLib& DynLib::operator=(DynLib&& other) noexcept {
     if (this != &other) {
