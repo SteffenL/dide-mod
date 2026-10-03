@@ -1,9 +1,9 @@
-#include "../cengine/ce6.hpp"
-#include "../config.hpp"
-#include "../dll_notify.hpp"
-#include "../dynlib.hpp"
-#include "../host.hpp"
-#include "base.hpp"
+#include "../../config.hpp"
+#include "../../dll_notify.hpp"
+#include "../../dynlib.hpp"
+#include "../../host.hpp"
+#include "../base.hpp"
+#include "ce6.hpp"
 
 #include <mutex>
 #include <type_traits>
@@ -17,13 +17,13 @@ constexpr std::string_view engine_dll_name{"engine_x64_rwdi.dll"};
 constexpr std::string_view filesystem_dll_name{"filesystem_x64_rwdi.dll"};
 constexpr std::string_view game_dll_name{"gamedll_x64_rwdi.dll"};
 
-class Ce6ModImpl final : public ModBase {
+class Ce6Mod final : public ModBase {
 public:
-    Ce6ModImpl(HostAppInfo host_info, config::Config config);
-    Ce6ModImpl(const Ce6ModImpl&) noexcept = delete;
-    Ce6ModImpl& operator=(const Ce6ModImpl&) noexcept = delete;
-    Ce6ModImpl(Ce6ModImpl&&) noexcept = delete;
-    Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept = delete;
+    Ce6Mod(HostAppInfo host_info, config::Config config);
+    Ce6Mod(const Ce6Mod&) noexcept = delete;
+    Ce6Mod& operator=(const Ce6Mod&) noexcept = delete;
+    Ce6Mod(Ce6Mod&&) noexcept = delete;
+    Ce6Mod& operator=(Ce6Mod&&) noexcept = delete;
     void run() override;
 
 private:
@@ -40,7 +40,7 @@ private:
     static bool ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags);
     static void ce_engine_InitializeGameScript_detour(void* p1, void* p2);
 
-    static Ce6ModImpl* sm_self;
+    static Ce6Mod* sm_self;
     bool m_moved{};
     HostAppInfo m_host_info;
     config::Config m_config;

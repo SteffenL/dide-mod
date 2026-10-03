@@ -1,10 +1,10 @@
 #include "mod.hpp"
 #include "config.hpp"
+#include "dynlib.hpp"
 #include "host.hpp"
 #include "log.hpp"
 #include "misc.hpp"
-#include "mod_impl/ce5_impl.hpp"
-#include "mod_impl/ce6_impl.hpp"
+#include "mod_impl/factory.hpp"
 #include "platform.hpp"
 #include "unicode.hpp"
 #include "version.hpp"
@@ -79,20 +79,8 @@ void run() {
     if (!g_config.general.enable_mod) {
         return;
     }
-
-    g_host_info = load_host_app_info();
-    log_host_info(g_host_info);
-
-    if (g_host_info.id == ce6::mod::dide_id || g_host_info.id == ce6::mod::dirde_id ||
-        g_host_info.id == ce6::mod::dl_id) {
-        g_mod = std::make_unique<ce6::mod::Ce6ModImpl>(g_host_info, g_config);
-    } else if (g_host_info.id == ce5::mod::di_id || g_host_info.id == ce5::mod::dir_id) {
-        g_mod = std::make_unique<ce5::mod::Ce5ModImpl>(g_host_info, g_config);
-    } else {
-        throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
-    }
-
-    g_mod->run();
+    log_host_info((g_host_info = load_host_app_info()));
+    (g_mod = create_mod_for_host(g_host_info, g_config))->run();
 }
 
 void on_init_error() noexcept {

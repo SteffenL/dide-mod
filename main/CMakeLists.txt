@@ -7,16 +7,17 @@ add_library(dm MODULE)
 target_sources(dm PRIVATE
     src/config.cpp
     src/dll_notify.cpp
+    src/dllmain.cpp
     src/dsound/dsound.cpp
     src/dsound/exports.cpp
     src/dsound/exports.def
     src/dynlib.cpp
     src/host.cpp
     src/log.cpp
-    src/main.cpp
     src/minhook.cpp
-    src/mod_impl/ce5_impl.cpp
-    src/mod_impl/ce6_impl.cpp
+    src/mod_impl/ce5/ce5_mod.cpp
+    src/mod_impl/ce6/ce6_mod.cpp
+    src/mod_impl/factory.cpp
     src/mod.cpp
     src/platform.cpp
     src/unicode.cpp

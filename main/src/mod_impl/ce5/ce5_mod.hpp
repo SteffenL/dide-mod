@@ -1,8 +1,9 @@
-#include "../cengine/ce5.hpp"
-#include "../config.hpp"
-#include "../dll_notify.hpp"
-#include "../host.hpp"
-#include "base.hpp"
+#include "../../config.hpp"
+#include "../../dll_notify.hpp"
+#include "../../dynlib.hpp"
+#include "../../host.hpp"
+#include "../base.hpp"
+#include "ce5.hpp"
 
 #include <mutex>
 #include <type_traits>
@@ -16,13 +17,13 @@ constexpr std::string_view filesystem_dll_name{"filesystem_x86_rwdi.dll"};
 constexpr std::string_view di_game_dll_name{"game_x86_rwdi.dll"};
 constexpr std::string_view dir_game_dll_name{"gamedll_x86_rwdi.dll"};
 
-class Ce5ModImpl final : public ModBase {
+class Ce5Mod final : public ModBase {
 public:
-    Ce5ModImpl(HostAppInfo host_info, config::Config config);
-    Ce5ModImpl(const Ce5ModImpl&) noexcept = delete;
-    Ce5ModImpl& operator=(const Ce5ModImpl&) noexcept = delete;
-    Ce5ModImpl(Ce5ModImpl&&) noexcept = delete;
-    Ce5ModImpl& operator=(Ce5ModImpl&&) noexcept = delete;
+    Ce5Mod(HostAppInfo host_info, config::Config config);
+    Ce5Mod(const Ce5Mod&) noexcept = delete;
+    Ce5Mod& operator=(const Ce5Mod&) noexcept = delete;
+    Ce5Mod(Ce5Mod&&) noexcept = delete;
+    Ce5Mod& operator=(Ce5Mod&&) noexcept = delete;
     void run() override;
 
 private:
@@ -51,7 +52,7 @@ private:
     #pragma GCC diagnostic pop
 #endif
 
-    static Ce5ModImpl* sm_self;
+    static Ce5Mod* sm_self;
     HostAppInfo m_host_info;
     config::Config m_config;
     DllNotifyReg m_ntdll_notify;

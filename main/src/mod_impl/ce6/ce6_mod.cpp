@@ -1,13 +1,13 @@
-#include "ce6_impl.hpp"
-#include "../cengine/ce6.hpp"
-#include "../config.hpp"
-#include "../dynlib.hpp"
-#include "../log.hpp"
-#include "../minhook.hpp"
-#include "../misc.hpp"
-#include "../pattern.hpp"
-#include "../platform.hpp"
-#include "../unicode.hpp"
+#include "ce6_mod.hpp"
+#include "../../config.hpp"
+#include "../../dynlib.hpp"
+#include "../../log.hpp"
+#include "../../minhook.hpp"
+#include "../../misc.hpp"
+#include "../../pattern.hpp"
+#include "../../platform.hpp"
+#include "../../unicode.hpp"
+#include "ce6.hpp"
 
 #include <cstdint>
 #include <span>
@@ -16,15 +16,15 @@
 
 namespace ce6::mod {
 
-Ce6ModImpl::Ce6ModImpl(HostAppInfo host_info, config::Config config)
+Ce6Mod::Ce6Mod(HostAppInfo host_info, config::Config config)
         : m_host_info{std::move(host_info)}, m_config{std::move(config)} {}
 
-void Ce6ModImpl::run() {
+void Ce6Mod::run() {
     sm_self = this;
     check_libs();
 }
 
-void Ce6ModImpl::check_libs() {
+void Ce6Mod::check_libs() {
     m_ntdll_notify.subscribe([this](void* handle, std::filesystem::path dll_path) {
         invoke_and_log_exception([&] {
             const std::filesystem::path name{dll_path.filename()};
@@ -49,7 +49,7 @@ void Ce6ModImpl::check_libs() {
     }
 }
 
-void Ce6ModImpl::on_engine_lib_loaded(DynLib lib) {
+void Ce6Mod::on_engine_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.engine.lib.emplace(std::move(lib));
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
@@ -58,7 +58,7 @@ void Ce6ModImpl::on_engine_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce6ModImpl::on_filesystem_lib_loaded(DynLib lib) {
+void Ce6Mod::on_filesystem_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.filesystem.lib.emplace(std::move(lib));
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
@@ -67,7 +67,7 @@ void Ce6ModImpl::on_filesystem_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce6ModImpl::on_game_lib_loaded(DynLib lib) {
+void Ce6Mod::on_game_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.game.lib.emplace(std::move(lib));
     if (m_libs.all_ok()) {
@@ -75,7 +75,7 @@ void Ce6ModImpl::on_game_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce6ModImpl::on_all_libs_loaded() {
+void Ce6Mod::on_all_libs_loaded() {
     if (m_libs_loaded) {
         return;
     }
@@ -87,7 +87,7 @@ void Ce6ModImpl::on_all_libs_loaded() {
     }
 }
 
-void Ce6ModImpl::hook() {
+void Ce6Mod::hook() {
     minhook::initialize();
     minhook::create_hook("fs.add_source", m_libs.filesystem.fn->add_source.get(), ce_fs_add_source_detour,
                          m_fs_original.add_source);
@@ -98,7 +98,7 @@ void Ce6ModImpl::hook() {
     minhook::apply_queued();
 }
 
-void Ce6ModImpl::load_paks(const config::Config& cfg) {
+void Ce6Mod::load_paks(const config::Config& cfg) {
     using ce6::fs::FFSAddSourceFlags;
     for (const auto& pak_path : cfg.load_custom_paks) {
         const auto pak_path_utf8{pak_path.u8string()};
@@ -113,7 +113,7 @@ void Ce6ModImpl::load_paks(const config::Config& cfg) {
     }
 }
 
-void Ce6ModImpl::set_dev_menu_enabled(bool enable) {
+void Ce6Mod::set_dev_menu_enabled(bool enable) {
     std::call_once(m_find_dev_menu_once_flag, [&] {
         if (auto found{sm_self->find_dev_menu_enable()}) {
             m_dev_menu_ptr = found;
@@ -129,7 +129,7 @@ void Ce6ModImpl::set_dev_menu_enabled(bool enable) {
     *m_dev_menu_ptr = enable;
 }
 
-bool* Ce6ModImpl::find_dev_menu_enable() {
+bool* Ce6Mod::find_dev_menu_enable() {
     const auto code_start{get_base_of_code(m_libs.game.lib->address())};
     const auto code_end{code_start + get_size_of_code(m_libs.game.lib->address())};
     const std::span code_range{reinterpret_cast<const char*>(code_start), reinterpret_cast<const char*>(code_end)};
@@ -158,7 +158,7 @@ bool* Ce6ModImpl::find_dev_menu_enable() {
     return enable_menu;
 }
 
-void Ce6ModImpl::log_libs() const {
+void Ce6Mod::log_libs() const {
     LOG_TX([this] {
         LOG("Game DLL: {:#x}", m_libs.game.lib->address());
         LOG("Engine DLL: {:#x}", m_libs.engine.lib->address());
@@ -166,7 +166,7 @@ void Ce6ModImpl::log_libs() const {
     });
 }
 
-bool Ce6ModImpl::ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags) {
+bool Ce6Mod::ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
         LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
         const auto result{sm_self->m_fs_original.add_source(path, flags)};
@@ -175,11 +175,11 @@ bool Ce6ModImpl::ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSource
     });
 }
 
-void Ce6ModImpl::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
+void Ce6Mod::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
     sm_self->m_engine_original.InitializeGameScript(p1, p2);
     sm_self->load_paks(sm_self->m_config);
 }
 
-Ce6ModImpl* Ce6ModImpl::sm_self{};
+Ce6Mod* Ce6Mod::sm_self{};
 
 } // namespace ce6::mod
