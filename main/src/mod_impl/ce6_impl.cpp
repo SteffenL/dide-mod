@@ -30,7 +30,6 @@ void Ce6ModImpl::check_libs() {
     m_ntdll_notify.subscribe([this](std::filesystem::path dll_path) {
         const std::filesystem::path name{dll_path.filename()};
         const auto name_str{narrow_string(name.wstring())};
-        LOG("DLL: {}", name_str);
         if (name_str.ends_with(engine_dll_name)) {
             on_engine_lib_loaded();
         } else if (name_str.ends_with(filesystem_dll_name)) {
@@ -51,7 +50,7 @@ void Ce6ModImpl::check_libs() {
 }
 
 void Ce6ModImpl::on_engine_lib_loaded() {
-    m_libs.engine.lib.emplace(engine_dll_name);
+    m_libs.engine.lib.emplace(DynLib{engine_dll_name});
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
@@ -59,7 +58,7 @@ void Ce6ModImpl::on_engine_lib_loaded() {
 }
 
 void Ce6ModImpl::on_filesystem_lib_loaded() {
-    m_libs.filesystem.lib.emplace(filesystem_dll_name);
+    m_libs.filesystem.lib.emplace(DynLib{filesystem_dll_name});
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
@@ -67,7 +66,7 @@ void Ce6ModImpl::on_filesystem_lib_loaded() {
 }
 
 void Ce6ModImpl::on_game_lib_loaded() {
-    m_libs.game.lib.emplace(game_dll_name);
+    m_libs.game.lib.emplace(DynLib{game_dll_name});
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
     }
@@ -159,6 +158,9 @@ bool* Ce6ModImpl::find_dev_menu_enable() {
     const uint32_t enable_menu_rel_address{*reinterpret_cast<uint32_t*>(code_start + *match_offset + 0x2 + 2)};
     const uintptr_t enable_menu_abs_address{rip + enable_menu_rel_address};
     auto* enable_menu{reinterpret_cast<bool*>(enable_menu_abs_address)};
+
+    LOG("Developer menu pattern: {:#x}", match_offset.value());
+    LOG("Developer menu variable: {:#x}", enable_menu_abs_address);
 
     return enable_menu;
 }

@@ -36,7 +36,6 @@ void Ce5ModImpl::check_libs() {
     m_ntdll_notify.subscribe([this](std::filesystem::path dll_path) {
         const std::filesystem::path name{dll_path.filename()};
         const auto name_str{narrow_string(name.wstring())};
-        LOG("DLL: {}", name_str);
         if (name_str.ends_with(engine_dll_name)) {
             on_engine_lib_loaded();
         } else if (name_str.ends_with(filesystem_dll_name)) {
@@ -175,11 +174,13 @@ bool* Ce5ModImpl::find_dev_menu_enable() {
         c:   b0 01                  mov    $0x1,%al
         */
         {"DeadIsland", Pattern{"74135F5E5DC605D7", 0x5 + 2}},
-        /* 0:   74 12                  je     0x14
-           2:   5f                     pop    %edi
-           3:   5e                     pop    %esi
-           4:   c6 05 47 21 c7 10 01   movb   $0x1,0x10c72147
-           b:   b0 01                  mov    $0x1,%al */
+        /*
+        0:   74 12                  je     0x14
+        2:   5f                     pop    %edi
+        3:   5e                     pop    %esi
+        4:   c6 05 47 21 c7 10 01   movb   $0x1,0x10c72147
+        b:   b0 01                  mov    $0x1,%al
+        */
         {"DeadIsland Riptide", Pattern{"74125F5EC60547", 0x4 + 2}},
     };
     const auto& search_info{search_infos.at(m_host_info.id)};
