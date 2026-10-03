@@ -3,92 +3,128 @@
 
 #include <filesystem>
 #include <format>
-#include <utility>
+#include <memory>
+#include <optional>
 
 #include <windows.h>
 
-namespace {
-void* load_library(const std::filesystem::path& name) {
-    auto handle{::LoadLibraryW(name.c_str())};
-    if (!handle) {
+class DynLib::Impl {
+public:
+    explicit Impl(NotNull<HMODULE> handle) : m_handle{handle.get()} {}
+    ~Impl() { release(); }
+    Impl& operator=(const Impl&) = delete;
+    Impl(const Impl&) = delete;
+    Impl& operator=(Impl&& other) = delete;
+    Impl(Impl&& other) = delete;
+
+    static std::unique_ptr<Impl> try_load(const std::filesystem::path& name) {
+        if (auto handle{::LoadLibraryW(name.c_str())}) {
+            return std::make_unique<Impl>(handle);
+        }
+        return nullptr;
+    }
+
+    static std::unique_ptr<Impl> try_attach_by_handle(NotNull<HMODULE> handle) {
+        HMODULE handle_{};
+        if (::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<LPCWSTR>(handle.get()),
+                                 &handle_)) {
+            return std::make_unique<Impl>(handle_);
+        }
+        return nullptr;
+    }
+
+    static std::unique_ptr<Impl> try_attach_by_name(const std::filesystem::path& name) {
+        HMODULE handle{};
+        if (::GetModuleHandleExW(0, name.c_str(), &handle)) {
+            return std::make_unique<Impl>(handle);
+        }
+        return nullptr;
+    }
+
+    static std::unique_ptr<Impl> load(const std::filesystem::path& name) {
+        if (auto impl{try_load(name)}) {
+            return impl;
+        }
         throw Error{std::format("Unable to load library ({}): {}", ::GetLastError(),
                                 reinterpret_cast<const char*>(name.u8string().c_str()))};
     }
-    return reinterpret_cast<void*>(handle);
-}
 
-void* find_loaded_library_unchecked(const std::filesystem::path& name, bool unowned = false) noexcept {
-    HMODULE handle{};
-    if (!::GetModuleHandleExW(unowned ? GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT : 0, name.c_str(), &handle)) {
-        return nullptr;
+    static std::unique_ptr<Impl> attach_by_handle(NotNull<HMODULE> handle) {
+        if (auto impl{try_attach_by_handle(handle)}) {
+            return impl;
+        }
+        throw Error{std::format("Unable to attach to library by handle ({})", ::GetLastError())};
     }
-    return reinterpret_cast<void*>(handle);
-}
 
-HMODULE attach_library(HMODULE existing_handle, bool unowned = false) {
-    HMODULE handle{};
-    if (!::GetModuleHandleExW((unowned ? GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT : 0) |
-                                  GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-                              reinterpret_cast<LPCWSTR>(existing_handle), &handle)) {
-        throw Error{std::format("Unable to attach to library ({})", ::GetLastError())};
+    static std::unique_ptr<Impl> attach_by_name(const std::filesystem::path& name) {
+        if (auto impl{try_attach_by_name(name)}) {
+            return impl;
+        }
+        throw Error{std::format("Unable to attach to library ({}): {}", ::GetLastError(),
+                                reinterpret_cast<const char*>(name.u8string().c_str()))};
     }
-    return handle;
-}
 
-void* find_loaded_library(const std::filesystem::path& name, bool unowned = false) {
-    if (auto* handle{find_loaded_library_unchecked(name, unowned)}) {
-        return handle;
+    void* sym_impl(const char* name) const {
+        if (auto fn{reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_handle), name))}) {
+            return fn;
+        }
+        throw Error{std::format("Function not found: {}", name)};
     }
-    throw Error{std::format("Unable to find loaded library ({}): {}", ::GetLastError(),
-                            reinterpret_cast<const char*>(name.u8string().c_str()))};
-}
-} // namespace
 
-DynLib::DynLib(const std::filesystem::path& name, NotNull<void*> handle, bool unowned)
-        : m_handle{handle.get()}, m_name{name}, m_unowned{unowned} {}
+    HMODULE handle() const noexcept { return m_handle; }
+    uintptr_t address() const noexcept { return reinterpret_cast<uintptr_t>(m_handle); }
 
-DynLib::DynLib(const std::filesystem::path& name) : m_handle{load_library(name)}, m_name{name} {}
-DynLib::~DynLib() { release(); }
-
-DynLib DynLib::attach(void* existing_handle, bool unowned) {
-    auto handle{attach_library(static_cast<HMODULE>(existing_handle), unowned)};
-    std::array<wchar_t, MAX_PATH> name{};
-    ::GetModuleFileNameW(handle, name.data(), static_cast<DWORD>(name.size()));
-    return DynLib{name.data(), handle, unowned};
-}
-
-DynLib DynLib::from_loaded(const std::filesystem::path& name, bool unowned) {
-    return DynLib{name, find_loaded_library(name, unowned), unowned};
-}
-
-bool DynLib::is_loaded(const std::filesystem::path& name) noexcept {
-    return !!find_loaded_library_unchecked(name, true);
-}
-
-DynLib& DynLib::operator=(DynLib&& other) noexcept {
-    if (this != &other) {
-        release();
-        m_handle = std::exchange(other.m_handle, nullptr);
-        m_name = std::move(other.m_name);
-        m_unowned = std::exchange(other.m_unowned, true);
+    std::filesystem::path name() const noexcept {
+        std::array<wchar_t, MAX_PATH> name{};
+        ::GetModuleFileNameW(m_handle, name.data(), static_cast<DWORD>(name.size()));
+        return name.data();
     }
-    return *this;
-}
 
-DynLib::DynLib(DynLib&& other) noexcept
-        : m_handle{std::exchange(other.m_handle, nullptr)}, m_name{std::move(other.m_name)},
-          m_unowned{std::exchange(other.m_unowned, true)} {}
+    void detach() noexcept { m_handle = nullptr; }
 
-void* DynLib::sym_impl(const char* name) const {
-    return reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_handle), name));
-}
-
-void* DynLib::handle() const noexcept { return m_handle; }
-uintptr_t DynLib::address() const noexcept { return reinterpret_cast<uintptr_t>(m_handle); }
-const std::filesystem::path& DynLib::name() const noexcept { return m_name; };
-
-void DynLib::release() noexcept {
-    if (m_handle && !m_unowned) {
-        ::FreeLibrary(static_cast<HMODULE>(m_handle));
+    void release() noexcept {
+        if (m_handle) {
+            ::FreeLibrary(m_handle);
+            m_handle = nullptr;
+        }
     }
+
+private:
+    HMODULE m_handle{};
+};
+
+DynLib::DynLib(std::unique_ptr<Impl> impl) : m_impl{std::move(impl)} {}
+
+std::optional<DynLib> DynLib::try_load(const std::filesystem::path& name) {
+    if (auto impl{Impl::try_load(name)}) {
+        return std::make_optional<DynLib>(std::move(impl));
+    }
+    return std::nullopt;
 }
+
+std::optional<DynLib> DynLib::try_attach_by_handle(void* handle) {
+    if (auto impl{Impl::try_attach_by_handle(static_cast<HMODULE>(handle))}) {
+        return std::make_optional<DynLib>(std::move(impl));
+    }
+    return std::nullopt;
+}
+
+std::optional<DynLib> DynLib::try_attach_by_name(const std::filesystem::path& name) {
+    if (auto impl{Impl::try_attach_by_name(name)}) {
+        return std::make_optional<DynLib>(std::move(impl));
+    }
+    return std::nullopt;
+}
+
+DynLib::~DynLib() = default;
+DynLib& DynLib::operator=(DynLib&&) noexcept = default;
+DynLib::DynLib(DynLib&&) noexcept = default;
+DynLib DynLib::load(const std::filesystem::path& name) { return DynLib{Impl::load(name)}; }
+DynLib DynLib::attach_by_handle(void* handle) { return DynLib{Impl::attach_by_handle(static_cast<HMODULE>(handle))}; }
+DynLib DynLib::attach_by_name(const std::filesystem::path& name) { return DynLib{Impl::attach_by_name(name)}; }
+void* DynLib::sym_impl(const char* name) const { return m_impl->sym_impl(name); }
+void* DynLib::handle() const noexcept { return m_impl->handle(); }
+uintptr_t DynLib::address() const noexcept { return m_impl->address(); }
+std::filesystem::path DynLib::name() const noexcept { return m_impl->name(); }
+void DynLib::detach() noexcept { m_impl->detach(); }
+void DynLib::release() noexcept { m_impl->release(); }

@@ -13,12 +13,12 @@ struct DllNotifyReg {
     DllNotifyReg& operator=(const DllNotifyReg&) = delete;
     DllNotifyReg(DllNotifyReg&& other) noexcept;
     DllNotifyReg& operator=(DllNotifyReg&& other) noexcept;
-    void notify(std::filesystem::path full_dll_name);
-    void subscribe(std::function<void(std::filesystem::path)> callback);
+    void notify(void* handle, std::filesystem::path dll_path);
+    void subscribe(std::function<void(void*, std::filesystem::path)> callback);
 
 private:
-    DynLib m_ntdll{"ntdll.dll"};
-    std::vector<std::function<void(std::filesystem::path)>> m_callbacks;
+    DynLib m_ntdll{DynLib::attach_by_name("ntdll.dll")};
+    std::vector<std::function<void(void*, std::filesystem::path)>> m_callbacks;
     void* m_cookie{};
     bool m_moved{};
 };

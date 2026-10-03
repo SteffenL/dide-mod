@@ -1,4 +1,5 @@
 #include "dll_notify.hpp"
+#include "misc.hpp"
 
 #include <filesystem>
 #include <functional>
@@ -58,7 +59,8 @@ VOID NTAPI notify_cb(ULONG NotificationReason, PCLDR_DLL_NOTIFICATION_DATA Notif
     if (auto* self{reinterpret_cast<DllNotifyReg*>(Context)}) {
         if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
             const auto* name{NotificationData->Loaded.FullDllName};
-            self->notify(std::wstring_view{name->Buffer, name->Length / sizeof(name->Buffer[0])});
+            self->notify(NotificationData->Loaded.DllBase,
+                         std::wstring_view{name->Buffer, name->Length / sizeof(name->Buffer[0])});
         }
     }
 }
@@ -96,12 +98,12 @@ DllNotifyReg& DllNotifyReg::operator=(DllNotifyReg&& other) noexcept {
     return *this;
 }
 
-void DllNotifyReg::notify(std::filesystem::path dll_path) {
+void DllNotifyReg::notify(void* handle, std::filesystem::path dll_path) {
     for (auto& cb : m_callbacks) {
-        cb(std::move(dll_path));
+        cb(handle, std::move(dll_path));
     }
 }
 
-void DllNotifyReg::subscribe(std::function<void(std::filesystem::path)> callback) {
+void DllNotifyReg::subscribe(std::function<void(void*, std::filesystem::path)> callback) {
     m_callbacks.push_back(std::move(callback));
 }

@@ -1,6 +1,7 @@
 #include "../cengine/ce6.hpp"
 #include "../config.hpp"
 #include "../dll_notify.hpp"
+#include "../dynlib.hpp"
 #include "../host.hpp"
 
 #include <mutex>
@@ -26,9 +27,9 @@ public:
 
 private:
     void check_libs();
-    void on_engine_lib_loaded();
-    void on_filesystem_lib_loaded();
-    void on_game_lib_loaded();
+    void on_engine_lib_loaded(DynLib lib);
+    void on_filesystem_lib_loaded(DynLib lib);
+    void on_game_lib_loaded(DynLib lib);
     void on_all_libs_loaded();
     void hook();
     void unhook();

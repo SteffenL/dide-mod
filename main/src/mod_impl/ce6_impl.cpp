@@ -1,6 +1,7 @@
 #include "ce6_impl.hpp"
 #include "../cengine/ce6.hpp"
 #include "../config.hpp"
+#include "../dynlib.hpp"
 #include "../log.hpp"
 #include "../minhook.hpp"
 #include "../misc.hpp"
@@ -27,46 +28,46 @@ Ce6ModImpl::~Ce6ModImpl() {
 }
 
 void Ce6ModImpl::check_libs() {
-    m_ntdll_notify.subscribe([this](std::filesystem::path dll_path) {
+    m_ntdll_notify.subscribe([this](void* handle, std::filesystem::path dll_path) {
         const std::filesystem::path name{dll_path.filename()};
         const auto name_str{narrow_string(name.wstring())};
-        if (name_str.ends_with(engine_dll_name)) {
-            on_engine_lib_loaded();
-        } else if (name_str.ends_with(filesystem_dll_name)) {
-            on_filesystem_lib_loaded();
-        } else if (name_str.ends_with(game_dll_name)) {
-            on_game_lib_loaded();
+        if (name_str == engine_dll_name) {
+            on_engine_lib_loaded(DynLib::attach_by_handle(handle));
+        } else if (name_str == filesystem_dll_name) {
+            on_filesystem_lib_loaded(DynLib::attach_by_handle(handle));
+        } else if (name_str == game_dll_name) {
+            on_game_lib_loaded(DynLib::attach_by_handle(handle));
         }
     });
-    if (DynLib::is_loaded(engine_dll_name)) {
-        on_engine_lib_loaded();
+    if (auto lib{DynLib::try_attach_by_name(engine_dll_name)}) {
+        on_engine_lib_loaded(std::move(lib).value());
     }
-    if (DynLib::is_loaded(filesystem_dll_name)) {
-        on_filesystem_lib_loaded();
+    if (auto lib{DynLib::try_attach_by_name(filesystem_dll_name)}) {
+        on_filesystem_lib_loaded(std::move(lib).value());
     }
-    if (DynLib::is_loaded(game_dll_name)) {
-        on_game_lib_loaded();
+    if (auto lib{DynLib::try_attach_by_name(game_dll_name)}) {
+        on_game_lib_loaded(std::move(lib).value());
     }
 }
 
-void Ce6ModImpl::on_engine_lib_loaded() {
-    m_libs.engine.lib.emplace(DynLib{engine_dll_name});
+void Ce6ModImpl::on_engine_lib_loaded(DynLib lib) {
+    m_libs.engine.lib.emplace(std::move(lib));
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
     }
 }
 
-void Ce6ModImpl::on_filesystem_lib_loaded() {
-    m_libs.filesystem.lib.emplace(DynLib{filesystem_dll_name});
+void Ce6ModImpl::on_filesystem_lib_loaded(DynLib lib) {
+    m_libs.filesystem.lib.emplace(std::move(lib));
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
     }
 }
 
-void Ce6ModImpl::on_game_lib_loaded() {
-    m_libs.game.lib.emplace(DynLib{game_dll_name});
+void Ce6ModImpl::on_game_lib_loaded(DynLib lib) {
+    m_libs.game.lib.emplace(std::move(lib));
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
     }
