@@ -28,6 +28,7 @@ public:
     static DynLib load(const std::filesystem::path& name);
     static DynLib attach_by_handle(void* handle);
     static DynLib attach_by_name(const std::filesystem::path& name);
+    static void pin_by_handle(void* handle);
 
     template<typename T>
     auto sym(const char* name) const {
@@ -41,6 +42,7 @@ public:
     std::filesystem::path name() const noexcept;
     void detach() noexcept;
     void release() noexcept;
+    void pin();
 
 private:
     std::unique_ptr<Impl> m_impl;

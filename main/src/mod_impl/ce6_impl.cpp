@@ -22,22 +22,19 @@ Ce6ModImpl::Ce6ModImpl(HostAppInfo host_info, config::Config config)
     check_libs();
 }
 
-Ce6ModImpl::~Ce6ModImpl() {
-    set_dev_menu_enabled(false);
-    unhook();
-}
-
 void Ce6ModImpl::check_libs() {
     m_ntdll_notify.subscribe([this](void* handle, std::filesystem::path dll_path) {
-        const std::filesystem::path name{dll_path.filename()};
-        const auto name_str{narrow_string(name.wstring())};
-        if (name_str == engine_dll_name) {
-            on_engine_lib_loaded(DynLib::attach_by_handle(handle));
-        } else if (name_str == filesystem_dll_name) {
-            on_filesystem_lib_loaded(DynLib::attach_by_handle(handle));
-        } else if (name_str == game_dll_name) {
-            on_game_lib_loaded(DynLib::attach_by_handle(handle));
-        }
+        invoke_and_log_exception([&] {
+            const std::filesystem::path name{dll_path.filename()};
+            const auto name_str{narrow_string(name.wstring())};
+            if (name_str == engine_dll_name) {
+                on_engine_lib_loaded(DynLib::attach_by_handle(handle));
+            } else if (name_str == filesystem_dll_name) {
+                on_filesystem_lib_loaded(DynLib::attach_by_handle(handle));
+            } else if (name_str == game_dll_name) {
+                on_game_lib_loaded(DynLib::attach_by_handle(handle));
+            }
+        });
     });
     if (auto lib{DynLib::try_attach_by_name(engine_dll_name)}) {
         on_engine_lib_loaded(std::move(lib).value());
@@ -51,6 +48,7 @@ void Ce6ModImpl::check_libs() {
 }
 
 void Ce6ModImpl::on_engine_lib_loaded(DynLib lib) {
+    lib.pin();
     m_libs.engine.lib.emplace(std::move(lib));
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
     if (m_libs.all_ok()) {
@@ -59,6 +57,7 @@ void Ce6ModImpl::on_engine_lib_loaded(DynLib lib) {
 }
 
 void Ce6ModImpl::on_filesystem_lib_loaded(DynLib lib) {
+    lib.pin();
     m_libs.filesystem.lib.emplace(std::move(lib));
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
     if (m_libs.all_ok()) {
@@ -67,6 +66,7 @@ void Ce6ModImpl::on_filesystem_lib_loaded(DynLib lib) {
 }
 
 void Ce6ModImpl::on_game_lib_loaded(DynLib lib) {
+    lib.pin();
     m_libs.game.lib.emplace(std::move(lib));
     if (m_libs.all_ok()) {
         on_all_libs_loaded();
@@ -94,16 +94,6 @@ void Ce6ModImpl::hook() {
     minhook::queue_enable_hook("fs.add_source", m_libs.filesystem.fn->add_source.get());
     minhook::queue_enable_hook("engine.InitializeGameScript", m_libs.engine.fn->InitializeGameScript.get());
     minhook::apply_queued();
-    m_hooked = true;
-}
-
-void Ce6ModImpl::unhook() {
-    minhook::queue_disable_hook("engine.InitializeGameScript", m_libs.engine.fn->InitializeGameScript.get());
-    minhook::queue_disable_hook("fs.add_source", m_libs.filesystem.fn->add_source.get());
-    minhook::apply_queued();
-    minhook::remove_hook("engine.InitializeGameScript", m_libs.engine.fn->InitializeGameScript.get());
-    minhook::remove_hook("fs.add_source", m_libs.filesystem.fn->add_source.get());
-    minhook::uninitialize();
 }
 
 void Ce6ModImpl::load_paks(const config::Config& cfg) {

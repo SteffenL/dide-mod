@@ -18,7 +18,6 @@ constexpr std::string_view dir_game_dll_name{"gamedll_x86_rwdi.dll"};
 class Ce5ModImpl {
 public:
     Ce5ModImpl(HostAppInfo host_info, config::Config config);
-    ~Ce5ModImpl();
     Ce5ModImpl(const Ce5ModImpl&) noexcept = delete;
     Ce5ModImpl& operator=(const Ce5ModImpl&) noexcept = delete;
     Ce5ModImpl(Ce5ModImpl&&) noexcept = delete;
@@ -31,7 +30,6 @@ private:
     void on_game_lib_loaded(DynLib lib);
     void on_all_libs_loaded();
     void hook();
-    void unhook();
     void load_paks(const config::Config& cfg);
     void set_dev_menu_enabled(bool enable);
     bool* find_dev_menu_enable();
@@ -60,7 +58,6 @@ private:
     ce5::fs::Functions<std::type_identity_t> m_fs_original;
     bool* m_dev_menu_ptr{};
     std::once_flag m_find_dev_menu_once_flag;
-    bool m_hooked{};
     bool m_libs_loaded{};
 };
 

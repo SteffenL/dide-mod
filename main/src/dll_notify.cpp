@@ -104,6 +104,6 @@ void DllNotifyReg::notify(void* handle, std::filesystem::path dll_path) {
     }
 }
 
-void DllNotifyReg::subscribe(std::function<void(void*, std::filesystem::path)> callback) {
+void DllNotifyReg::subscribe(NotifyCallbackFn callback) {
     m_callbacks.push_back(std::move(callback));
 }

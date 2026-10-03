@@ -7,16 +7,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID /*lpvReserved*/)
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         ::DisableThreadLibraryCalls(hinstDLL);
-        if (invoke_and_log_exception([] {
-                init();
+        if (invoke_and_log_exception([hinstDLL] {
+                init(hinstDLL);
                 create_mod();
             })) {
             on_init_error();
             return FALSE;
         }
-        break;
-    case DLL_PROCESS_DETACH:
-        invoke_and_log_exception([] { destroy_mod(); });
         break;
     }
     return TRUE;

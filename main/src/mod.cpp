@@ -67,12 +67,13 @@ void log_host_info(const HostAppInfo& info) {
     });
 }
 
-void init() {
+void init(void* instance) {
     g_config = load_config();
     Logger::init(g_config.general.log_file, g_config.general.enable_logging);
     log_version();
     validate_config(g_config);
     log_config(g_config);
+    DynLib::pin_by_handle(instance);
 }
 
 void create_mod() {
@@ -91,14 +92,6 @@ void create_mod() {
     } else {
         throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
     }
-}
-
-void destroy_mod() {
-    if (!g_config.general.enable_mod) {
-        return;
-    }
-
-    g_mod.reset();
 }
 
 void on_init_error() noexcept {

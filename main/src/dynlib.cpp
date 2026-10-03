@@ -64,6 +64,14 @@ public:
                                 reinterpret_cast<const char*>(name.u8string().c_str()))};
     }
 
+    static void pin_by_handle(void* handle) {
+        HMODULE handle_{};
+        if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                                  reinterpret_cast<LPCWSTR>(handle), &handle_)) {
+            throw Error{std::format("Unable to pin library by handle ({})", ::GetLastError())};
+        }
+    }
+
     void* sym_impl(const char* name) const {
         if (auto fn{reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_handle), name))}) {
             return fn;
@@ -88,6 +96,8 @@ public:
             m_handle = nullptr;
         }
     }
+
+    void pin() { pin_by_handle(m_handle); }
 
 private:
     HMODULE m_handle{};
@@ -122,9 +132,11 @@ DynLib::DynLib(DynLib&&) noexcept = default;
 DynLib DynLib::load(const std::filesystem::path& name) { return DynLib{Impl::load(name)}; }
 DynLib DynLib::attach_by_handle(void* handle) { return DynLib{Impl::attach_by_handle(static_cast<HMODULE>(handle))}; }
 DynLib DynLib::attach_by_name(const std::filesystem::path& name) { return DynLib{Impl::attach_by_name(name)}; }
+void DynLib::pin_by_handle(void* handle) { Impl::pin_by_handle(handle); }
 void* DynLib::sym_impl(const char* name) const { return m_impl->sym_impl(name); }
 void* DynLib::handle() const noexcept { return m_impl->handle(); }
 uintptr_t DynLib::address() const noexcept { return m_impl->address(); }
 std::filesystem::path DynLib::name() const noexcept { return m_impl->name(); }
 void DynLib::detach() noexcept { m_impl->detach(); }
 void DynLib::release() noexcept { m_impl->release(); }
+void DynLib::pin() { m_impl->pin(); }

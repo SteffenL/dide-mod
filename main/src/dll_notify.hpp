@@ -7,6 +7,8 @@
 #include <vector>
 
 struct DllNotifyReg {
+    using NotifyCallbackFn = std::function<void(void* handle, std::filesystem::path dll_path)>;
+
     DllNotifyReg();
     ~DllNotifyReg();
     DllNotifyReg(const DllNotifyReg&) = delete;
@@ -14,11 +16,11 @@ struct DllNotifyReg {
     DllNotifyReg(DllNotifyReg&& other) noexcept;
     DllNotifyReg& operator=(DllNotifyReg&& other) noexcept;
     void notify(void* handle, std::filesystem::path dll_path);
-    void subscribe(std::function<void(void*, std::filesystem::path)> callback);
+    void subscribe(NotifyCallbackFn callback);
 
 private:
     DynLib m_ntdll{DynLib::attach_by_name("ntdll.dll")};
-    std::vector<std::function<void(void*, std::filesystem::path)>> m_callbacks;
+    std::vector<NotifyCallbackFn> m_callbacks;
     void* m_cookie{};
     bool m_moved{};
 };
