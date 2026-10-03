@@ -25,6 +25,16 @@ void* find_loaded_library_unchecked(const std::filesystem::path& name, bool unow
     return reinterpret_cast<void*>(handle);
 }
 
+HMODULE attach_library(HMODULE existing_handle, bool unowned = false) {
+    HMODULE handle{};
+    if (!::GetModuleHandleExW((unowned ? GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT : 0) |
+                                  GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+                              reinterpret_cast<LPCWSTR>(existing_handle), &handle)) {
+        throw Error{std::format("Unable to attach to library ({})", ::GetLastError())};
+    }
+    return handle;
+}
+
 void* find_loaded_library(const std::filesystem::path& name, bool unowned = false) {
     if (auto* handle{find_loaded_library_unchecked(name, unowned)}) {
         return handle;
@@ -39,6 +49,13 @@ DynLib::DynLib(const std::filesystem::path& name, NotNull<void*> handle, bool un
 
 DynLib::DynLib(const std::filesystem::path& name) : m_handle{load_library(name)}, m_name{name} {}
 DynLib::~DynLib() { release(); }
+
+DynLib DynLib::attach(void* existing_handle, bool unowned) {
+    auto handle{attach_library(static_cast<HMODULE>(existing_handle), unowned)};
+    std::array<wchar_t, MAX_PATH> name{};
+    ::GetModuleFileNameW(handle, name.data(), static_cast<DWORD>(name.size()));
+    return DynLib{name.data(), handle, unowned};
+}
 
 DynLib DynLib::from_loaded(const std::filesystem::path& name, bool unowned) {
     return DynLib{name, find_loaded_library(name, unowned), unowned};

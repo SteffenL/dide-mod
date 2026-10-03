@@ -1,9 +1,6 @@
-#include "exports.hpp"
 #include "../dynlib.hpp"
 #include "../misc.hpp"
 #include "dsound.hpp"
-
-#include <optional>
 
 using namespace dsound;
 
@@ -13,44 +10,44 @@ struct DSoundWrapper {
 };
 
 namespace {
-std::optional<DSoundWrapper> g_wrapper;
+DSoundWrapper& wrapper() {
+    static DSoundWrapper instance;
+    return instance;
 }
-
-void create_dsound_wrapper() { g_wrapper = DSoundWrapper{}; }
-void destroy_dsound_wrapper() { g_wrapper.reset(); }
+} // namespace
 
 extern "C" {
 
 HRESULT WINAPI DirectSoundCreate(LPCGUID pcGuidDevice, LPDIRECTSOUND* ppDS, LPUNKNOWN pUnkOuter) {
-    return g_wrapper->fn.DirectSoundCreate(pcGuidDevice, ppDS, pUnkOuter);
+    return wrapper().fn.DirectSoundCreate(pcGuidDevice, ppDS, pUnkOuter);
 }
 
 HRESULT WINAPI DirectSoundEnumerateA(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext) {
-    return g_wrapper->fn.DirectSoundEnumerateA(pDSEnumCallback, pContext);
+    return wrapper().fn.DirectSoundEnumerateA(pDSEnumCallback, pContext);
 }
 
 HRESULT WINAPI DirectSoundEnumerateW(LPDSENUMCALLBACKW pDSEnumCallback, LPVOID pContext) {
-    return g_wrapper->fn.DirectSoundEnumerateW(pDSEnumCallback, pContext);
+    return wrapper().fn.DirectSoundEnumerateW(pDSEnumCallback, pContext);
 }
 
 HRESULT WINAPI DirectSoundCaptureCreate(LPCGUID pcGuidDevice, LPDIRECTSOUNDCAPTURE* ppDSC, LPUNKNOWN pUnkOuter) {
-    return g_wrapper->fn.DirectSoundCaptureCreate(pcGuidDevice, ppDSC, pUnkOuter);
+    return wrapper().fn.DirectSoundCaptureCreate(pcGuidDevice, ppDSC, pUnkOuter);
 }
 
 HRESULT WINAPI DirectSoundCaptureEnumerateA(LPDSENUMCALLBACKA pDSEnumCallback, LPVOID pContext) {
-    return g_wrapper->fn.DirectSoundCaptureEnumerateA(pDSEnumCallback, pContext);
+    return wrapper().fn.DirectSoundCaptureEnumerateA(pDSEnumCallback, pContext);
 }
 
 HRESULT WINAPI DirectSoundCaptureEnumerateW(LPDSENUMCALLBACKW pDSEnumCallback, LPVOID pContext) {
-    return g_wrapper->fn.DirectSoundCaptureEnumerateW(pDSEnumCallback, pContext);
+    return wrapper().fn.DirectSoundCaptureEnumerateW(pDSEnumCallback, pContext);
 }
 
 HRESULT WINAPI DirectSoundCreate8(LPCGUID pcGuidDevice, LPDIRECTSOUND8* ppDS8, LPUNKNOWN pUnkOuter) {
-    return g_wrapper->fn.DirectSoundCreate8(pcGuidDevice, ppDS8, pUnkOuter);
+    return wrapper().fn.DirectSoundCreate8(pcGuidDevice, ppDS8, pUnkOuter);
 }
 
 HRESULT WINAPI DirectSoundCaptureCreate8(LPCGUID pcGuidDevice, LPDIRECTSOUNDCAPTURE8* ppDSC8, LPUNKNOWN pUnkOuter) {
-    return g_wrapper->fn.DirectSoundCaptureCreate8(pcGuidDevice, ppDSC8, pUnkOuter);
+    return wrapper().fn.DirectSoundCaptureCreate8(pcGuidDevice, ppDSC8, pUnkOuter);
 }
 
 HRESULT WINAPI DirectSoundFullDuplexCreate(LPCGUID pcGuidCaptureDevice, LPCGUID pcGuidRenderDevice,
@@ -58,18 +55,16 @@ HRESULT WINAPI DirectSoundFullDuplexCreate(LPCGUID pcGuidCaptureDevice, LPCGUID 
                                            DWORD dwLevel, LPDIRECTSOUNDFULLDUPLEX* ppDSFD,
                                            LPDIRECTSOUNDCAPTUREBUFFER8* ppDSCBuffer8, LPDIRECTSOUNDBUFFER8* ppDSBuffer8,
                                            LPUNKNOWN pUnkOuter) {
-    return g_wrapper->fn.DirectSoundFullDuplexCreate(pcGuidCaptureDevice, pcGuidRenderDevice, pcDSCBufferDesc,
-                                                     pcDSBufferDesc, hWnd, dwLevel, ppDSFD, ppDSCBuffer8, ppDSBuffer8,
-                                                     pUnkOuter);
+    return wrapper().fn.DirectSoundFullDuplexCreate(pcGuidCaptureDevice, pcGuidRenderDevice, pcDSCBufferDesc,
+                                                    pcDSBufferDesc, hWnd, dwLevel, ppDSFD, ppDSCBuffer8, ppDSBuffer8,
+                                                    pUnkOuter);
 }
 
-HRESULT WINAPI GetDeviceID(LPCGUID pGuidSrc, LPGUID pGuidDest) {
-    return g_wrapper->fn.GetDeviceID(pGuidSrc, pGuidDest);
-}
+HRESULT WINAPI GetDeviceID(LPCGUID pGuidSrc, LPGUID pGuidDest) { return wrapper().fn.GetDeviceID(pGuidSrc, pGuidDest); }
 
-HRESULT __stdcall DllCanUnloadNow() { return g_wrapper->fn.DllCanUnloadNow(); }
+HRESULT __stdcall DllCanUnloadNow() { return wrapper().fn.DllCanUnloadNow(); }
 
 HRESULT __stdcall DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
-    return g_wrapper->fn.DllGetClassObject(rclsid, riid, ppv);
+    return wrapper().fn.DllGetClassObject(rclsid, riid, ppv);
 }
 }

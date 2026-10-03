@@ -18,6 +18,7 @@ public:
     DynLib(const DynLib&) = delete;
     DynLib& operator=(DynLib&&) noexcept;
     DynLib(DynLib&&) noexcept;
+    static DynLib attach(void* existing_handle, bool unowned = false);
     static DynLib from_loaded(const std::filesystem::path& name, bool unowned = false);
     static bool is_loaded(const std::filesystem::path& name) noexcept;
 
