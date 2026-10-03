@@ -1,2 +1,0 @@
-option(DM_USE_DSOUND_PROXY "" OFF)
-option(DM_USE_XINPUT_PROXY "" OFF)
