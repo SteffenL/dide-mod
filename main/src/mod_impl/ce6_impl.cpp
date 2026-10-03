@@ -17,7 +17,9 @@
 namespace ce6::mod {
 
 Ce6ModImpl::Ce6ModImpl(HostAppInfo host_info, config::Config config)
-        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {
+        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {}
+
+void Ce6ModImpl::run() {
     sm_self = this;
     check_libs();
 }

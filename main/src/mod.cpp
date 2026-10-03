@@ -11,10 +11,9 @@
 
 #include <cstdlib>
 #include <format>
-#include <optional>
+#include <memory>
 #include <string>
 #include <string_view>
-#include <variant>
 
 void log_version() { LOG("Core version: {}", project_get_version()); }
 
@@ -30,7 +29,7 @@ namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
-std::optional<std::variant<ce5::mod::Ce5ModImpl, ce6::mod::Ce6ModImpl>> g_mod;
+std::unique_ptr<ModBase> g_mod;
 } // namespace
 
 config::Config load_config() {
@@ -86,12 +85,14 @@ void create_mod() {
 
     if (g_host_info.id == ce6::mod::dide_id || g_host_info.id == ce6::mod::dirde_id ||
         g_host_info.id == ce6::mod::dl_id) {
-        g_mod.emplace(std::in_place_type<ce6::mod::Ce6ModImpl>, g_host_info, g_config);
+        g_mod = std::make_unique<ce6::mod::Ce6ModImpl>(g_host_info, g_config);
     } else if (g_host_info.id == ce5::mod::di_id || g_host_info.id == ce5::mod::dir_id) {
-        g_mod.emplace(std::in_place_type<ce5::mod::Ce5ModImpl>, g_host_info, g_config);
+        g_mod = std::make_unique<ce5::mod::Ce5ModImpl>(g_host_info, g_config);
     } else {
         throw Error{std::format("Unknown host ID: {}", g_host_info.id)};
     }
+
+    g_mod->run();
 }
 
 void on_init_error() noexcept {

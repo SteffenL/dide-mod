@@ -3,6 +3,7 @@
 #include "../dll_notify.hpp"
 #include "../dynlib.hpp"
 #include "../host.hpp"
+#include "base.hpp"
 
 #include <mutex>
 #include <type_traits>
@@ -16,13 +17,14 @@ constexpr std::string_view engine_dll_name{"engine_x64_rwdi.dll"};
 constexpr std::string_view filesystem_dll_name{"filesystem_x64_rwdi.dll"};
 constexpr std::string_view game_dll_name{"gamedll_x64_rwdi.dll"};
 
-class Ce6ModImpl {
+class Ce6ModImpl final : public ModBase {
 public:
     Ce6ModImpl(HostAppInfo host_info, config::Config config);
     Ce6ModImpl(const Ce6ModImpl&) noexcept = delete;
     Ce6ModImpl& operator=(const Ce6ModImpl&) noexcept = delete;
     Ce6ModImpl(Ce6ModImpl&&) noexcept = delete;
     Ce6ModImpl& operator=(Ce6ModImpl&&) noexcept = delete;
+    void run() override;
 
 private:
     void check_libs();

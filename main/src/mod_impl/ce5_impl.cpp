@@ -23,7 +23,9 @@ std::string_view get_game_dll_name(std::string_view game_id) {
 } // namespace
 
 Ce5ModImpl::Ce5ModImpl(HostAppInfo host_info, config::Config config)
-        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {
+        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {}
+
+void Ce5ModImpl::run() {
     sm_self = this;
     check_libs();
 }

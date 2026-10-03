@@ -2,6 +2,7 @@
 #include "../config.hpp"
 #include "../dll_notify.hpp"
 #include "../host.hpp"
+#include "base.hpp"
 
 #include <mutex>
 #include <type_traits>
@@ -15,13 +16,14 @@ constexpr std::string_view filesystem_dll_name{"filesystem_x86_rwdi.dll"};
 constexpr std::string_view di_game_dll_name{"game_x86_rwdi.dll"};
 constexpr std::string_view dir_game_dll_name{"gamedll_x86_rwdi.dll"};
 
-class Ce5ModImpl {
+class Ce5ModImpl final : public ModBase {
 public:
     Ce5ModImpl(HostAppInfo host_info, config::Config config);
     Ce5ModImpl(const Ce5ModImpl&) noexcept = delete;
     Ce5ModImpl& operator=(const Ce5ModImpl&) noexcept = delete;
     Ce5ModImpl(Ce5ModImpl&&) noexcept = delete;
     Ce5ModImpl& operator=(Ce5ModImpl&&) noexcept = delete;
+    void run() override;
 
 private:
     void check_libs();
