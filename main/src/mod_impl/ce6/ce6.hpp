@@ -15,6 +15,8 @@ struct FFSAddSourceFlags {
         ALLOW_DUPLICATES = 16,
         PRELOAD = 32,
         CACHE = 64, // Guess based on: if fs_cache_enabled && (flags & 0x40) == 0 then init_cache()
+        UNKNOWN_128 = 128,
+        UNKNOWN_256 = 256,
     };
 };
 
