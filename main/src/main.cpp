@@ -9,7 +9,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID /*lpvReserved*/)
         ::DisableThreadLibraryCalls(hinstDLL);
         if (invoke_and_log_exception([hinstDLL] {
                 init(hinstDLL);
-                create_mod();
+                run();
             })) {
             on_init_error();
             return FALSE;

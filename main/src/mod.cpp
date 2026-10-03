@@ -75,7 +75,7 @@ void init(void* instance) {
     DynLib::pin_by_handle(instance);
 }
 
-void create_mod() {
+void run() {
     if (!g_config.general.enable_mod) {
         return;
     }
