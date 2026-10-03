@@ -11,7 +11,6 @@
 
 #include <cstdlib>
 #include <format>
-#include <memory>
 #include <string>
 #include <string_view>
 
@@ -29,7 +28,6 @@ namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
 config::Config g_config;
 HostAppInfo g_host_info;
-std::unique_ptr<ModBase> g_mod;
 } // namespace
 
 config::Config load_config() {
@@ -72,15 +70,14 @@ void init(void* instance) {
     log_version();
     validate_config(g_config);
     log_config(g_config);
+    log_host_info((g_host_info = load_host_app_info()));
     DynLib::pin_by_handle(instance);
 }
 
 void run() {
-    if (!g_config.general.enable_mod) {
-        return;
+    if (g_config.general.enable_mod) {
+        run_mod_for_host(std::move(g_host_info), std::move(g_config));
     }
-    log_host_info((g_host_info = load_host_app_info()));
-    (g_mod = create_mod_for_host(g_host_info, g_config))->run();
 }
 
 void on_init_error() noexcept {

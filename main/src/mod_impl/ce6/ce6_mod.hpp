@@ -1,12 +1,9 @@
-#include "../../config.hpp"
-#include "../../dll_notify.hpp"
-#include "../../dynlib.hpp"
-#include "../../host.hpp"
-#include "../base.hpp"
-#include "ce6.hpp"
+#pragma once
 
-#include <mutex>
-#include <type_traits>
+#include "../../config.hpp"
+#include "../../host.hpp"
+
+#include <string_view>
 
 namespace ce6::mod {
 
@@ -17,40 +14,6 @@ constexpr std::string_view engine_dll_name{"engine_x64_rwdi.dll"};
 constexpr std::string_view filesystem_dll_name{"filesystem_x64_rwdi.dll"};
 constexpr std::string_view game_dll_name{"gamedll_x64_rwdi.dll"};
 
-class Ce6Mod final : public ModBase {
-public:
-    Ce6Mod(HostAppInfo host_info, config::Config config);
-    Ce6Mod(const Ce6Mod&) noexcept = delete;
-    Ce6Mod& operator=(const Ce6Mod&) noexcept = delete;
-    Ce6Mod(Ce6Mod&&) noexcept = delete;
-    Ce6Mod& operator=(Ce6Mod&&) noexcept = delete;
-    void run() override;
-
-private:
-    void check_libs();
-    void on_engine_lib_loaded(DynLib lib);
-    void on_filesystem_lib_loaded(DynLib lib);
-    void on_game_lib_loaded(DynLib lib);
-    void on_all_libs_loaded();
-    void hook();
-    void load_paks(const config::Config& cfg);
-    void set_dev_menu_enabled(bool enable);
-    bool* find_dev_menu_enable();
-    void log_libs() const;
-    static bool ce_fs_add_source_detour(const char* path, ce6::fs::FFSAddSourceFlags::ENUM flags);
-    static void ce_engine_InitializeGameScript_detour(void* p1, void* p2);
-
-    static Ce6Mod* sm_self;
-    bool m_moved{};
-    HostAppInfo m_host_info;
-    config::Config m_config;
-    DllNotifyReg m_ntdll_notify;
-    ce6::Libraries m_libs;
-    ce6::engine::Functions<std::type_identity_t> m_engine_original;
-    ce6::fs::Functions<std::type_identity_t> m_fs_original;
-    bool* m_dev_menu_ptr{};
-    std::once_flag m_find_dev_menu_once_flag;
-    bool m_libs_loaded{};
-};
+void ce6_mod_run(HostAppInfo host_info, config::Config config);
 
 } // namespace ce6::mod

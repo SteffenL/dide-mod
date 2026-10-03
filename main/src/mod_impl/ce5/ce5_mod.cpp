@@ -1,6 +1,8 @@
 #include "ce5_mod.hpp"
 #include "../../config.hpp"
+#include "../../dll_notify.hpp"
 #include "../../dynlib.hpp"
+#include "../../host.hpp"
 #include "../../log.hpp"
 #include "../../minhook.hpp"
 #include "../../misc.hpp"
@@ -10,28 +12,57 @@
 #include "ce5.hpp"
 
 #include <cstdint>
+#include <mutex>
 #include <span>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
 namespace ce5::mod {
 namespace {
+HostAppInfo m_host_info;
+config::Config m_config;
+DllNotifyReg m_ntdll_notify;
+ce5::Libraries m_libs;
+ce5::engine::Functions<std::type_identity_t> m_engine_original;
+ce5::fs::Functions<std::type_identity_t> m_fs_original;
+bool* m_dev_menu_ptr{};
+std::once_flag m_find_dev_menu_once_flag;
+bool m_libs_loaded{};
+
+std::string_view get_game_dll_name(std::string_view game_id);
+void check_libs();
+void on_engine_lib_loaded(DynLib lib);
+void on_filesystem_lib_loaded(DynLib lib);
+void on_game_lib_loaded(DynLib lib);
+void on_all_libs_loaded();
+void hook();
+void load_paks(const config::Config& cfg);
+void set_dev_menu_enabled(bool enable);
+bool* find_dev_menu_enable();
+void log_libs();
+bool ce_fs_add_source_detour(const char* path, ce5::fs::FFSAddSourceFlags::ENUM flags);
+void ce_engine_InitializeGameScript_detour(void* p1, void* p2);
+
+#ifdef __GNUC__
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wattributes"
+#endif
+
+static void __fastcall ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* dummy, const char* p1,
+                                                       const char* p2);
+
+#ifdef __GNUC__
+    #pragma GCC diagnostic pop
+#endif
+
 std::string_view get_game_dll_name(std::string_view game_id) {
     return game_id == di_id ? di_game_dll_name : dir_game_dll_name;
 }
-} // namespace
 
-Ce5Mod::Ce5Mod(HostAppInfo host_info, config::Config config)
-        : m_host_info{std::move(host_info)}, m_config{std::move(config)} {}
-
-void Ce5Mod::run() {
-    sm_self = this;
-    check_libs();
-}
-
-void Ce5Mod::check_libs() {
-    m_ntdll_notify.subscribe([this](void* handle, std::filesystem::path dll_path) {
+void check_libs() {
+    m_ntdll_notify.subscribe([](void* handle, std::filesystem::path dll_path) {
         invoke_and_log_exception([&] {
             const std::filesystem::path name{dll_path.filename()};
             const auto name_str{narrow_string(name.wstring())};
@@ -55,7 +86,7 @@ void Ce5Mod::check_libs() {
     }
 }
 
-void Ce5Mod::on_engine_lib_loaded(DynLib lib) {
+void on_engine_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.engine.lib.emplace(std::move(lib));
     m_libs.engine.fn.emplace(m_libs.engine.lib.value());
@@ -64,7 +95,7 @@ void Ce5Mod::on_engine_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce5Mod::on_filesystem_lib_loaded(DynLib lib) {
+void on_filesystem_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.filesystem.lib.emplace(std::move(lib));
     m_libs.filesystem.fn.emplace(m_libs.filesystem.lib.value());
@@ -73,7 +104,7 @@ void Ce5Mod::on_filesystem_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce5Mod::on_game_lib_loaded(DynLib lib) {
+void on_game_lib_loaded(DynLib lib) {
     lib.pin();
     m_libs.game.lib.emplace(std::move(lib));
     if (m_libs.all_ok()) {
@@ -81,7 +112,7 @@ void Ce5Mod::on_game_lib_loaded(DynLib lib) {
     }
 }
 
-void Ce5Mod::on_all_libs_loaded() {
+void on_all_libs_loaded() {
     if (m_libs_loaded) {
         return;
     }
@@ -89,11 +120,11 @@ void Ce5Mod::on_all_libs_loaded() {
     log_libs();
     hook();
     if (m_config.features.developer_menu) {
-        sm_self->set_dev_menu_enabled(true);
+        set_dev_menu_enabled(true);
     }
 }
 
-void Ce5Mod::hook() {
+void hook() {
     minhook::initialize();
     minhook::create_hook("fs.add_source", m_libs.filesystem.fn->add_source.get(), ce_fs_add_source_detour,
                          m_fs_original.add_source);
@@ -107,7 +138,7 @@ void Ce5Mod::hook() {
     minhook::apply_queued();
 }
 
-void Ce5Mod::load_paks(const config::Config& cfg) {
+void load_paks(const config::Config& cfg) {
     using ce5::fs::FFSAddSourceFlags;
     for (const auto& pak_path : cfg.load_custom_paks) {
         const auto pak_path_utf8{pak_path.u8string()};
@@ -122,9 +153,9 @@ void Ce5Mod::load_paks(const config::Config& cfg) {
     }
 }
 
-void Ce5Mod::set_dev_menu_enabled(bool enable) {
+void set_dev_menu_enabled(bool enable) {
     std::call_once(m_find_dev_menu_once_flag, [&] {
-        if (auto found{sm_self->find_dev_menu_enable()}) {
+        if (auto found{find_dev_menu_enable()}) {
             m_dev_menu_ptr = found;
         }
     });
@@ -138,7 +169,7 @@ void Ce5Mod::set_dev_menu_enabled(bool enable) {
     *m_dev_menu_ptr = enable;
 }
 
-bool* Ce5Mod::find_dev_menu_enable() {
+bool* find_dev_menu_enable() {
     const auto code_start{get_base_of_code(m_libs.game.lib->address())};
     const auto code_end{code_start + get_size_of_code(m_libs.game.lib->address())};
     const std::span code_range{
@@ -189,42 +220,45 @@ bool* Ce5Mod::find_dev_menu_enable() {
     return enable_menu;
 }
 
-void Ce5Mod::log_libs() const {
-    LOG_TX([this] {
+void log_libs() {
+    LOG_TX([] {
         LOG("Game DLL: {:#x}", m_libs.game.lib->address());
         LOG("Engine DLL: {:#x}", m_libs.engine.lib->address());
         LOG("Filesystem DLL: {:#x}", m_libs.filesystem.lib->address());
     });
 }
 
-bool Ce5Mod::ce_fs_add_source_detour(const char* path, ce5::fs::FFSAddSourceFlags::ENUM flags) {
+bool ce_fs_add_source_detour(const char* path, ce5::fs::FFSAddSourceFlags::ENUM flags) {
     return LOG_TX([&] {
         LOG_PARTIAL("Adding source: \"{}\" {}", path, static_cast<std::underlying_type_t<decltype(flags)>>(flags));
-        const auto result{sm_self->m_fs_original.add_source(path, flags)};
+        const auto result{m_fs_original.add_source(path, flags)};
         LOG_PARTIAL(" (returned {})\n", result);
         return result;
     });
 }
 
-void Ce5Mod::ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
-    sm_self->m_engine_original.InitializeGameScript(p1, p2);
-}
+void ce_engine_InitializeGameScript_detour(void* p1, void* p2) { m_engine_original.InitializeGameScript(p1, p2); }
 
 #ifdef __GNUC__
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wattributes"
 #endif
 
-void __fastcall Ce5Mod::ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* /*dummy*/, const char* p1,
-                                                        const char* p2) {
-    sm_self->m_engine_original.IGame_MountDlc(self, p1, p2);
-    sm_self->load_paks(sm_self->m_config);
+void __fastcall ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* /*dummy*/, const char* p1,
+                                                const char* p2) {
+    m_engine_original.IGame_MountDlc(self, p1, p2);
+    load_paks(m_config);
 }
 
 #ifdef __GNUC__
     #pragma GCC diagnostic pop
 #endif
+} // namespace
 
-Ce5Mod* Ce5Mod::sm_self{};
+void ce5_mod_run(HostAppInfo host_info, config::Config config) {
+    m_host_info = std::move(host_info);
+    m_config = std::move(config);
+    check_libs();
+}
 
 } // namespace ce5::mod
