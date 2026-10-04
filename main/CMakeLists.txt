@@ -16,7 +16,7 @@ target_sources(dm PRIVATE
     src/minhook.cpp
     src/mod.cpp
     src/platform.cpp
-    src/unicode.cpp
+    src/string.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.cpp"
 )
 target_link_libraries(dm PRIVATE dbghelp shlwapi version minhook)

@@ -1,6 +1,6 @@
 #include "host.hpp"
 #include "misc.hpp"
-#include "unicode.hpp"
+#include "string.hpp"
 
 #include <array>
 #include <cassert>
@@ -60,7 +60,9 @@ HostAppInfo load_host_app_info() {
                                          .c_str(),
                                      reinterpret_cast<LPVOID*>(&product_name), &product_name_size);
                     if (product_name && product_name_size > 0) {
-                        host_id = narrow_string(trim_right(std::wstring_view{product_name, product_name_size}));
+                        std::wstring_view product_name_view{product_name, product_name_size};
+                        product_name_view = product_name_view.substr(0, product_name_view.find(L'\0'));
+                        host_id = narrow_string(product_name_view);
                     }
                 }
             }

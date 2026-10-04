@@ -1,6 +1,6 @@
 #include "platform.hpp"
 #include "misc.hpp"
-#include "unicode.hpp"
+#include "string.hpp"
 
 #include <filesystem>
 #include <string>

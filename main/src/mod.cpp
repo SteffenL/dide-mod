@@ -7,7 +7,7 @@
 #include "misc.hpp"
 #include "pattern.hpp"
 #include "platform.hpp"
-#include "unicode.hpp"
+#include "string.hpp"
 #include "version.hpp"
 
 #include <cstdlib>
