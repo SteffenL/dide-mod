@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dynlib.hpp"
+#include "../dynlib.hpp"
 
 #include <filesystem>
 

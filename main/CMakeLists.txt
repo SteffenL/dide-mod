@@ -6,10 +6,10 @@ generate_scm_version(
 add_library(dm MODULE)
 target_sources(dm PRIVATE
     src/config.cpp
-    src/dsound.cpp
+    src/dsound/dsound.cpp
+    src/dsound/exports.cpp
+    src/dsound/exports.def
     src/dynlib.cpp
-    src/exports.cpp
-    src/exports.def
     src/host.cpp
     src/log.cpp
     src/main.cpp
