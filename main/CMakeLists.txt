@@ -8,9 +8,6 @@ target_sources(dm PRIVATE
     src/config.cpp
     src/dll_notify.cpp
     src/dllmain.cpp
-    src/dsound/dsound.cpp
-    src/dsound/exports.cpp
-    src/dsound/exports.def
     src/dynlib.cpp
     src/host.cpp
     src/log.cpp
@@ -21,6 +18,24 @@ target_sources(dm PRIVATE
     src/string.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.cpp"
 )
+
+if(DM_USE_DSOUND_PROXY)
+    target_compile_definitions(dm PRIVATE DM_USE_DSOUND_PROXY)
+    target_sources(dm PRIVATE
+        src/dsound/dsound.cpp
+        src/dsound/exports.cpp
+        src/dsound/exports.def
+    )
+endif()
+
+if(DM_USE_XINPUT_PROXY)
+    target_compile_definitions(dm PRIVATE DM_USE_XINPUT_PROXY)
+    target_sources(dm PRIVATE
+        src/xinput/exports.cpp
+        src/xinput/exports.def
+        src/xinput/xinput.cpp
+    )
+endif()
 
 try_compile(CE5_SUPPORTED SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/mod_impl/ce5/compiler_check.cpp")
 if (CE5_SUPPORTED)
@@ -34,7 +49,7 @@ endif()
 
 target_link_libraries(dm PRIVATE dbghelp shlwapi version minhook)
 set_target_properties(dm PROPERTIES
-    OUTPUT_NAME dsound
+    OUTPUT_NAME dide_mod
     PREFIX ""
     CXX_VISIBILITY_PRESET hidden
 )

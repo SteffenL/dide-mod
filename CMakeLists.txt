@@ -20,6 +20,7 @@ else()
     add_link_options(-static)
 endif()
 
+include(cmake/options.cmake)
 include(cmake/scm.cmake)
 
 add_subdirectory(thirdparty)
