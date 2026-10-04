@@ -11,6 +11,7 @@ target_sources(dm PRIVATE
     src/dsound/dsound.cpp
     src/dsound/exports.cpp
     src/dsound/exports.def
+    src/dx11.cpp
     src/dynlib.cpp
     src/host.cpp
     src/log.cpp
