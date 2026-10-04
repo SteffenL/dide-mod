@@ -1,11 +1,13 @@
 #include "config.hpp"
-#include "misc.hpp"
+#include "string.hpp"
 
 #include <array>
 #include <cwchar>
 #include <filesystem>
 #include <functional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <windows.h>
 
@@ -43,6 +45,92 @@ void ini_enum_keys(const std::filesystem::path& file_path, const wchar_t* sectio
     }
 }
 
+bool parse_bool(const std::string& s, bool default_value) noexcept {
+    try {
+        size_t pos{};
+        const auto value{std::stoll(s, &pos)};
+        if (pos == s.size()) {
+            return value != 0;
+        }
+        return default_value;
+    } catch (const std::exception&) {
+        return default_value;
+    }
+}
+
+Config::CustomPakEntry parse_custom_pak_entry(const std::filesystem::path& path, const std::string& input) {
+    enum class State { prop_name, prop_value, ignore_prop_value };
+
+    std::vector<std::string> positionals;
+    std::unordered_map<std::string, std::string> properties;
+    std::string prop_name;
+    std::string prop_value;
+    State state{State::prop_name};
+
+    for (std::string::size_type i{}; i < input.size(); ++i) {
+        const auto c{input[i]};
+        switch (state) {
+        case State::prop_name:
+            if (c == ',') {
+                if (!prop_name.empty()) {
+                    positionals.emplace_back(trim(prop_name));
+                    prop_name.clear();
+                }
+                continue;
+            }
+            if (c == '=') {
+                if (prop_name.empty()) {
+                    state = State::ignore_prop_value;
+                } else {
+                    state = State::prop_value;
+                }
+                continue;
+            }
+            prop_name += c;
+            break;
+        case State::prop_value:
+            if (c == ',') {
+                properties.insert_or_assign(std::string{trim(prop_name)}, std::string{trim(prop_value)});
+                prop_name.clear();
+                prop_value.clear();
+                state = State::prop_name;
+                continue;
+            }
+            prop_value += c;
+            break;
+        case State::ignore_prop_value:
+            if (c == ',') {
+                state = State::prop_name;
+                continue;
+            }
+            break;
+        }
+    }
+
+    if (state == State::prop_value) {
+        properties.insert_or_assign(std::string{trim(prop_name)}, std::string{trim(prop_value)});
+    } else if (state == State::prop_name && !prop_name.empty()) {
+        positionals.emplace_back(trim(prop_name));
+    }
+
+    Config::CustomPakEntry entry;
+    entry.path = path;
+
+    if (positionals.size() > 0) {
+        entry.enabled = parse_bool(positionals[0], entry.enabled);
+    }
+
+    for (auto& [pn, pv] : properties) {
+        if (pn == "stage") {
+            entry.stage = std::move(pv);
+        } else if (pn == "enabled") {
+            entry.enabled = parse_bool(pv, entry.enabled);
+        }
+    }
+
+    return entry;
+}
+
 } // namespace
 
 void load_general(Config& config, const std::filesystem::path& file_path) {
@@ -71,13 +159,14 @@ void load_custom_pak(Config& config, const std::filesystem::path& file_path) {
             return;
         }
 
-        const auto pak_enabled{static_cast<bool>(ini_read_uint(file_path, section_name, pak_path.c_str(), 0))};
-        if (!pak_enabled) {
+        const auto entry_str{ini_read_string(file_path, section_name, pak_path.c_str(), L"0")};
+        const auto entry{parse_custom_pak_entry(pak_path, narrow_string(entry_str))};
+        if (!entry.enabled) {
             // Ignore
             return;
         }
 
-        config.load_custom_paks.emplace_back(pak_path);
+        config.load_custom_paks.push_back(std::move(entry));
     });
 }
 

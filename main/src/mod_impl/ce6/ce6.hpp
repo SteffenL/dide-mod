@@ -1,9 +1,9 @@
 #pragma once
 
-#include "dynlib.hpp"
-#include "misc.hpp"
+#include "../../dynlib.hpp"
+#include "../../misc.hpp"
 
-namespace cengine {
+namespace ce6 {
 namespace fs {
 struct FFSAddSourceFlags {
     // Some names discovered in debug info of Dead Island, others unconfirmed
@@ -43,17 +43,19 @@ struct Functions {
 };
 } // namespace engine
 
-struct CEngineLibraries {
+struct Libraries {
+    bool all_ok() const { return game.lib.has_value() && engine.lib.has_value() && filesystem.lib.has_value(); }
+
     struct {
-        DynLib lib{DynLib::attach_by_name("gamedll_x64_rwdi.dll")};
+        std::optional<DynLib> lib;
     } game;
     struct {
-        DynLib lib{DynLib::attach_by_name("engine_x64_rwdi.dll")};
-        engine::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib;
+        std::optional<engine::Functions<NotNull>> fn;
     } engine;
     struct {
-        DynLib lib{DynLib::attach_by_name("filesystem_x64_rwdi.dll")};
-        fs::Functions<NotNull> fn{lib};
+        std::optional<DynLib> lib;
+        std::optional<fs::Functions<NotNull>> fn;
     } filesystem;
 };
-} // namespace cengine
+} // namespace ce6

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 #include <vector>
 
 namespace config {
@@ -17,7 +18,13 @@ struct Config {
         bool custom_pak{};
     } features;
 
-    std::vector<std::filesystem::path> load_custom_paks;
+    struct CustomPakEntry {
+        std::filesystem::path path;
+        bool enabled{};
+        std::string stage;
+    };
+
+    std::vector<CustomPakEntry> load_custom_paks;
 };
 
 Config load_file(const std::filesystem::path& file_path);
