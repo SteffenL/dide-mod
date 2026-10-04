@@ -98,7 +98,7 @@ bool invoke_and_log_exception(Callable callable) noexcept {
             std::rethrow_exception(eptr);
         } catch (const Error& ex) {
             const auto& loc{ex.where()};
-            LOG("Error: {}\n  in: {}\n  at: {}:{}:{}\n", ex.what(), loc.function_name(), loc.file_name(), loc.line(),
+            LOG("Error: {}\n  in: {}\n  at: {}:{}:{}", ex.what(), loc.function_name(), loc.file_name(), loc.line(),
                 loc.column());
             return true;
         } catch (const std::exception& ex) {
