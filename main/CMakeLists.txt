@@ -39,4 +39,14 @@ set_target_properties(dm PROPERTIES
     CXX_VISIBILITY_PRESET hidden
 )
 
-install(TARGETS dm LIBRARY DESTINATION . COMPONENT dm_archive)
+try_compile(IS_X64 SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/arch_x64_check.cpp")
+if(IS_X64)
+    set(TARGET_INSTALL_SUBDIR x64)
+endif()
+
+try_compile(IS_X86 SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/arch_x86_check.cpp")
+if(IS_X86)
+    set(TARGET_INSTALL_SUBDIR x86)
+endif()
+
+install(TARGETS dm LIBRARY DESTINATION "${TARGET_INSTALL_SUBDIR}" COMPONENT dm_archive)

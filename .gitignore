@@ -1,9 +1,3 @@
 /build/
-bin/
-ipch/
-obj/
-
-*.opensdf
-*.sdf
-*.suo
-*.user
+/build-*/
+/dist/
