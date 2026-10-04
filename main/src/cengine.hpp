@@ -45,14 +45,14 @@ struct Functions {
 
 struct CEngineLibraries {
     struct {
-        DynLib lib{DynLib::from_loaded("gamedll_x64_rwdi.dll")};
+        DynLib lib{DynLib::attach_by_name("gamedll_x64_rwdi.dll")};
     } game;
     struct {
-        DynLib lib{DynLib::from_loaded("engine_x64_rwdi.dll")};
+        DynLib lib{DynLib::attach_by_name("engine_x64_rwdi.dll")};
         engine::Functions<NotNull> fn{lib};
     } engine;
     struct {
-        DynLib lib{DynLib::from_loaded("filesystem_x64_rwdi.dll")};
+        DynLib lib{DynLib::attach_by_name("filesystem_x64_rwdi.dll")};
         fs::Functions<NotNull> fn{lib};
     } filesystem;
 };

@@ -8,7 +8,7 @@
 using namespace dsound;
 
 struct DSoundWrapper {
-    DynLib lib{get_system_dsound_dll_path()};
+    DynLib lib{DynLib::load(get_system_dsound_dll_path())};
     Functions<NotNull> fn{lib};
 };
 
