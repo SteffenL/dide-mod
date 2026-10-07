@@ -15,6 +15,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    add_compile_options(/MP)
 else()
     add_compile_options(-static)
     add_link_options(-static)
