@@ -68,7 +68,8 @@ public:
         return callable();
     }
 
-    static void init(const std::filesystem::path& file_path, bool enable) { set(create(file_path, enable)); }
+    static void initialize(const std::filesystem::path& file_path, bool enable) { set(create(file_path, enable)); }
+    static bool is_initialized() { return !!sm_instance; }
 
     static std::unique_ptr<Logger> create(const std::filesystem::path& file_path, bool enable) {
         return std::make_unique<Logger>(private_t{}, file_path, enable);

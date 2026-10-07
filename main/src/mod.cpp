@@ -6,6 +6,7 @@
 #include "misc.hpp"
 #include "mod_impl/factory.hpp"
 #include "platform.hpp"
+#include "startup_hook.hpp"
 #include "string.hpp"
 #include "version.hpp"
 
@@ -26,8 +27,6 @@ void validate_config(const config::Config& cfg) {
 
 namespace {
 constexpr std::string_view msgbox_title_prefix{"[DIDE mod] "};
-config::Config g_config;
-HostAppInfo g_host_info;
 } // namespace
 
 config::Config load_config() {
@@ -67,31 +66,63 @@ void log_host_info(const HostAppInfo& info) {
     });
 }
 
-void on_init_error() noexcept {
-    static const auto title{std::string{msgbox_title_prefix} + "Error"};
-    msgbox_error("Initialization failed; please see the log file for details.", title);
-    std::exit(1);
+void log_entry_point(std::string_view name) { LOG("Startup triggered by {}", name); }
+
+void log_runtime_environment() {
+    const auto wine_version{get_wine_version_str()};
+    LOG("Runtime environment: {}", wine_version ? std::format("Wine {}", *wine_version) : "Windows");
+}
+
+[[noreturn]] void on_init_error() {
+    // Avoid any potential loader lock trouble before calling any functions (message box) living in user32.dll
+    if (!is_loader_lock_held_by_current_thread()) {
+        try {
+            static const auto title{std::string{msgbox_title_prefix} + "Error"};
+            std::string message{"Initialization failed"};
+            if (Logger::is_initialized()) {
+                message += "; please see the log file for details";
+            }
+            message += ".";
+            msgbox_error(message, title);
+        } catch (...) {
+            // No point in handling this
+        }
+    }
+    kill_current_process(1);
+}
+
+void continue_mod_main(std::string_view entry_point_name, config::Config config) {
+    log_entry_point(entry_point_name);
+    log_runtime_environment();
+    log_version();
+    log_config(config);
+    validate_config(config);
+    auto host_info{load_host_app_info()};
+    log_host_info(host_info);
+    if (config.general.enable_mod) {
+        run_mod_for_host(std::move(host_info), std::move(config));
+    }
 }
 
 bool mod_main(void* instance) {
     try {
-        g_config = load_config();
-        Logger::init(g_config.general.log_file, g_config.general.enable_logging);
-        if (invoke_and_log_exception([instance] {
-                log_version();
-                validate_config(g_config);
-                log_config(g_config);
-                log_host_info((g_host_info = load_host_app_info()));
-                DynLib::pin_by_handle(instance);
-                if (g_config.general.enable_mod) {
-                    run_mod_for_host(std::move(g_host_info), std::move(g_config));
+        auto config{load_config()};
+        Logger::initialize(config.general.log_file, config.general.enable_logging);
+        create_startup_hook([=, config = std::move(config)](std::string_view entry_point_name) {
+            try {
+                if (invoke_and_log_exception([=, config = std::move(config)]() mutable {
+                        continue_mod_main(entry_point_name, std::move(config));
+                    })) {
+                    on_init_error();
                 }
-            })) {
-            on_init_error();
-            return false;
-        }
+            } catch (...) {
+                on_init_error();
+            }
+        });
+        DynLib::pin_by_handle(instance);
         return true;
     } catch (...) {
+        // Would be nice to report errors here but we shouldn't do it directly in DllMain
         return false;
     }
 }

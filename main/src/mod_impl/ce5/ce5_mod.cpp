@@ -255,7 +255,6 @@ void __fastcall ce_engine_IGame_MountDlc_detour(ce5::engine::IGame* self, void* 
 } // namespace
 
 void ce5_mod_run(HostAppInfo host_info, config::Config config) {
-    minhook::initialize();
     g_host_info = std::move(host_info);
     g_config = std::move(config);
     check_libs();

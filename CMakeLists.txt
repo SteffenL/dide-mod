@@ -20,6 +20,7 @@ else()
     add_compile_options(-static)
     add_link_options(-static)
 endif()
+add_compile_definitions(DM_STATIC_RUNTIME)
 
 include(cmake/scm.cmake)
 

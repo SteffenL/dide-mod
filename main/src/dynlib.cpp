@@ -73,8 +73,15 @@ public:
         }
     }
 
-    void* sym_impl(const char* name) const {
+    void* try_sym_impl(const char* name) const {
         if (auto fn{reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_handle), name))}) {
+            return fn;
+        }
+        return nullptr;
+    }
+
+    void* sym_impl(const char* name) const {
+        if (auto fn{try_sym_impl(name)}) {
             return fn;
         }
         throw Error{std::format("Function not found: {}", name)};
@@ -134,6 +141,7 @@ DynLib DynLib::load(const std::filesystem::path& name) { return DynLib{Impl::loa
 DynLib DynLib::attach_by_handle(void* handle) { return DynLib{Impl::attach_by_handle(static_cast<HMODULE>(handle))}; }
 DynLib DynLib::attach_by_name(const std::filesystem::path& name) { return DynLib{Impl::attach_by_name(name)}; }
 void DynLib::pin_by_handle(void* handle) { Impl::pin_by_handle(handle); }
+void* DynLib::try_sym_impl(const char* name) const { return m_impl->try_sym_impl(name); }
 void* DynLib::sym_impl(const char* name) const { return m_impl->sym_impl(name); }
 void* DynLib::handle() const noexcept { return m_impl->handle(); }
 uintptr_t DynLib::address() const noexcept { return m_impl->address(); }

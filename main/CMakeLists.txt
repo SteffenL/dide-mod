@@ -18,6 +18,7 @@ target_sources(dm PRIVATE
     src/mod_impl/factory.cpp
     src/mod.cpp
     src/platform.cpp
+    src/startup_hook.cpp
     src/string.cpp
     "${CMAKE_CURRENT_BINARY_DIR}/generated/version.cpp"
 )

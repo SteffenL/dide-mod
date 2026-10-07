@@ -12,7 +12,6 @@
 
 #include <format>
 #include <string_view>
-#include <utility>
 
 void run_mod_for_host(HostAppInfo host_info, config::Config config) {
 #ifdef CE6_SUPPORTED

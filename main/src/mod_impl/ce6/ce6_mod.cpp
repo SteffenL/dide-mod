@@ -216,7 +216,6 @@ void ce_engine_InitializeGameScript_detour(void* p1, void* p2) {
 } // namespace
 
 void ce6_mod_run(HostAppInfo host_info, config::Config config) {
-    minhook::initialize();
     g_host_info = std::move(host_info);
     g_config = std::move(config);
     check_libs();

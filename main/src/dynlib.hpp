@@ -31,11 +31,18 @@ public:
     static void pin_by_handle(void* handle);
 
     template<typename T>
+    auto try_sym(const char* name) const {
+        using fn_t = std::add_pointer_t<std::remove_pointer_t<T>>;
+        return reinterpret_cast<fn_t>(try_sym_impl(name));
+    }
+
+    template<typename T>
     auto sym(const char* name) const {
         using fn_t = std::add_pointer_t<std::remove_pointer_t<T>>;
         return reinterpret_cast<fn_t>(sym_impl(name));
     }
 
+    void* try_sym_impl(const char* name) const;
     void* sym_impl(const char* name) const;
     void* handle() const noexcept;
     uintptr_t address() const noexcept;
