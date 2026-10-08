@@ -20,18 +20,22 @@ The original simple pak loader for Dead Island game series and accidentally also
 - Dead Island Riptide Definitive Edition
 - Dying Light (partial)
 
-## Runtime Requirements
+## Runtime Prerequisites
 
 - OS: Windows
 
-## Build Requirements
+## Build Prerequisites
+
+### Required
 
 - C++20 compiler
 - CMake >= 3.22
 - Git
-- Recommended:
-  - Bash shell
-  - Ninja
+
+### Recommended
+
+- Bash shell
+- Ninja
 
 ## Building
 
