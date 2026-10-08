@@ -26,14 +26,16 @@ The original simple pak loader for Dead Island game series and accidentally also
 
 ## Build Requirements
 
-- Bash shell for the build script (optional)
 - C++20 compiler
 - CMake >= 3.22
-- Ninja
+- Git
+- Recommended:
+  - Bash shell
+  - Ninja
 
 ## Building
 
-With this command the project is built for x86 and x64 separately, then combined into a distributable archive in `dist/`.
+With the following Bash script, the project is built for x86 and x64 separately, then combined into a distributable archive in `dist/`.
 
 ```
 scripts/build.sh
