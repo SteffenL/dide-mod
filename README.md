@@ -27,7 +27,7 @@ The original simple pak loader for Dead Island game series and accidentally also
 ## Build Requirements
 
 - C++20 compiler
-- CMake
+- CMake >= 3.22
 - Ninja
 
 ## Building
