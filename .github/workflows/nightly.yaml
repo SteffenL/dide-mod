@@ -1,0 +1,33 @@
+name: Nightly
+on:
+  schedule:
+    - cron: "0 0 * * *"
+defaults:
+  run:
+    shell: bash
+jobs:
+  build-mingw:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends mingw-w64
+      - name: Build
+        run: scripts/build.sh --nightly
+
+  build-msvc:
+    runs-on: windows-2022
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build
+        run: scripts/build.sh --nightly
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/gh_release.sh --confirm
