@@ -24,7 +24,8 @@ std::filesystem::path exe_path() {
             throw Error{"Unable to get exe path"};
         }
         if (size >= buffer.size()) {
-            buffer.resize(size);
+            // Don't know how much space we need so try to double it
+            buffer.resize(size * 2);
             continue;
         }
         return std::wstring_view{buffer.data(), size};
